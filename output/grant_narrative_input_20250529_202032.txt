@@ -1,0 +1,106 @@
+GRANT NARRATIVE - GENERATED FROM INPUT DOCUMENTS
+============================================================
+
+Generated: 2025-05-29 20:20:32
+Source Documents: doc_6.docx, doc_2.docx, doc_3.docx
+
+ORGANIZATION OVERVIEW
+====================
+Organization: Freedom Equity Inc.
+
+Mission: The mission of Freedom Equity Inc. is to act as a community-based lending alternative that increases access to capital for Black business owners who have historically been left out of conventional lending.
+
+Background: – Brief history, including number of year in existence, description of activities, achievements and community impact. 
+Freedom Equity Inc. (FEI), a community development financial institution (CDFI), launched in 2021 with two core goals:
+1. Provide affordable capital to small business owners facing collateral, cash flow, or credit history challenges.
+2. Deliver Business Development Services to applicants and borrowers committed to improving their skills, leveraging current resources, and engaging with supplier diversity networks.
+Governed by a board of directors, executive leadership team, and loan review committee, our organization operates through two primary departments. Our loan department manages the complete loan lifecycle while our Business Development Services team provides comprehensive technical assistance from pre-application through the full loan term. This support includes personalized one-on-one guidance and group sessions delivered both internally and through strategic partnerships with regional organizations like the Columbus Minority Business Assistance Center, Columbus Metropolitan Library, Central Ohio African American Chamber of Commerce, and Goldman Sachs 10k Small Businesses.
+The Franklin County Blueprint for Reducing Poverty highlights stark economic disparities in our region, with unemployment rates nearly double the county average in some neighborhoods and poverty rates reaching 30% compared to the county's 16.7%. These statistics informed our strategic focus on low-income and disadvantaged communities (LIDAC) tracts, where investments generate local jobs and strengthen the tax base.
+Since inception, we've raised $3.81 million for our small business loan fund (25% from private sources, 75% from public sources) and deployed $2.3 million across 56 small businesses. Forty percent of our projects are located in LIDAC tracts within Franklin County and surrounding areas, with an average loan amount of $41,119. These investments have enabled businesses to purchase inventory, consolidate high-interest debt, and implement technology improvements that strengthened operations, improved cash flow, and increased revenue. To date, 349 jobs were retained and 192 new jobs created. Our impact is amplified through partnerships with the City of Columbus, Franklin County Board of Commissioners, and community organizations like the Columbus Urban League.
+Annual Operating Budget: $1,671,494.00
+Please indicate any KeyBank employees that may be board or committee members of your organization. 
+None.
+Please describe the diversity of the staff that you would like to 
+highlight. 
+FEI is proudly led by a diverse and representative leadership team that reflects the communities we serve. Our Executive Director is a queer Black woman, and our executive staff is composed entirely of Black professionals, with 67% identifying as women.
+Please describe the diversity of the board that you would like to highlight. 
+Our Board of Directors similarly reflects our values, with 60% women and 100% of members identifying as Black or African American. This intentional leadership structure ensures that our strategies and decisions are grounded in lived experience, cultural understanding, and a deep commitment to advancing racial and economic equity in underserved communities.
+Organization Communities Served 
+Communities Served 
+FEI serves under-resourced Black business owners in Central Ohio, with a focus on those who have historically been excluded from traditional banking and financing opportunities. 
+Primary Population Served 
+Please select the classification(s) that describes at least 50% of the population 
+that benefit from the organization as a whole. 
+Please select all that apply 
+How does your organization determine family income? 
+FEI serves a client base in which approximately 40–50% of participants are classified as low- to moderate-income (LMI). We collect this information through a self-reported income question on our program intake form to help determine eligibility and better understand the communities we serve. For consistency and accuracy, we use the HUD definition of LMI. In addition to LMI status, we also consider participants from LIDACs, using the EPA’s Environmental Justice Screening Tool and the Climate and Economic Justice Screening Tool to identify areas disproportionately impacted by economic and environmental burdens. This approach ensures that FEI’s services remain accessible and relevant to the communities most in need of support.
+Contact Information 
+Organization’s lead Executive Director, CEO or President 
+Prefix: None
+Last Name: Frost
+First Name: J. Averi
+Title: Executive Director
+Phone Number: (614) 484-7075
+E-mail Address: javerif@freedomequity.org
+Executive Director, CEO or President: Same as above
+Grant Narrative
+Proposal Title: Building Financial Resilience: Seeding a Debt Consolidation Program for Underserved Entrepreneurs
+Proposal Description – How the grant will enable the organization to advance affordable housing for low-to-moderate income populations and/or small business development. 
+FEI seeks $200,000 in unrestricted funding to seed a debt consolidation program designed to stabilize and strengthen small businesses led by systemically under-resourced Black entrepreneurs in Central Ohio. This initiative will provide accessible, lower-interest loans to replace high-cost debt. The program will also fund access to trusted fintech platforms (NED, Cyphr AI, and CreditHub) to streamline loan administration and offer tailored technical assistance to our clients. By addressing systemic barriers to credit and promoting strong financial practices, FEI aims to build a more equitable small business lending ecosystem and create lasting pathways to economic mobility. This grant will directly enable FEI to advance small business development by providing entrepreneurs with the capital, resources, and support they need to grow and thrive sustainably.
+Additional Proposal Description 
+Please select the community development category which best describes the proposal. 
+Select
+Goals and Strategies – Please describe the organization’s broader goals and strategies for creating sustainable community impact. 
+FEI is committed to fostering sustainable community impact by addressing the systemic barriers that prevent historically underserved entrepreneurs from accessing capital and support. Our broader goals are to increase economic mobility, close racial wealth gaps, and strengthen small business ecosystems in Central Ohio in Black, LMI, and disadvantaged communities. We achieve these goals through a three-pronged strategy: (1) providing affordable capital to reduce financial barriers to starting, stabilizing, or scaling small businesses; (2) offering targeted business development services that build the knowledge, confidence, and capacity of entrepreneurs; and (3) investing in FEI’s operational infrastructure to expand our ability to serve more borrowers efficiently and equitably. By centering racial and economic equity in our work and leveraging strong public-private partnerships, FEI is helping to create a more inclusive economy where business ownership becomes a viable and sustainable pathway to generational wealth.
+Examples of Success – Example of recent successes or initiatives related to affordable housing and/or small business development. 
+In the heart of downtown Columbus, Parable Coffee isn’t just a cafe, it’s a movement rooted in equity. Founded in October 2020 by Ben Willis and Jeff Clark, Parable was launched with a mission to build a business that actively liberates people professionally and economically. From the start, the founders made bold operational choices that reflected their values. Notably, they opted to eliminate the traditional tip system in favor of livable wages and shared prosperity for their staff. This model prioritizes economic justice and sets a new standard for fairness in the service industry. Their staff is largely queer and BIPOC.
+As two Black entrepreneurs navigating the challenges of launching a purpose-driven business during a pandemic, Ben and Jeff knew they needed capital that aligned with their mission. Through Freedom Equity Inc., Parable was able to consolidate high-interest debt into a single, affordable loan with a fixed 5% interest rate. This structure provided stability and breathing room—allowing the team to reinvest in operations, retain staff, and remain true to their equity-centered business model.
+Today, Parable stands as a vibrant example of what’s possible when small businesses are supported with values-aligned capital. It’s more than a coffee shop. Parable is a community hub and a beacon of economic empowerment in Central Ohio.
+Budget and Financial Information 
+Comprehensive Organizational Budget 
+Please attach budget
+Funding and Stability 
+Please provide an overview of current organization funding sources and financial stability. 
+Proposed Use of Funds 
+Description of how grant funds will support the organization’s broader mission and operational needs. 
+Impact Measurement 
+Metrics and Examples – Please provide metrics or examples that demonstrate the organization’s impact in affordable housing or small business development. 
+See Truist or JPMorgan Chase grant for metrics
+Evaluation 
+Please explain plans for evaluating the impact of the grant funding. 
+Supporting Documentation*** 
+Community Development Financial Institution Certification 
+Board, Officer and Staff List 
+IRS Determination Letter
+Most Recent Form 990 or Other Tax Filings 
+One Year Preceding Most Recent Form 990 or Other Tax Filings 
+Two Years Preceding Most Recent Form 990 or Other Tax Filings 
+Most Recent Audited Financials 
+One Year Preceding Most Recent Audited Financials 
+Two Years Preceding Most Recent Audited Financials 
+W-9 Form
+
+Location: and sustainability of CDFIs that play a vital role in advancing affordable housing and small business development. We intend to award one $200,000 grant to an exemplary CDFI in each of our markets, recognizing their outstanding contributions to creating lasting, positive change. These grants will provide flexible operating funding to support CDFIs in achieving their broader mission of creating sustainable economic opportunities, whether through expanding services, strengthening infrastructure, or deepening community impact.
+
+
+FUNDING OPPORTUNITY
+====================
+Funder: KeyBank Foundation
+Grant Amount: $200
+Eligibility: Be a certified CDFI in good standing., Operate as a nonprofit or for-profit CDFI headquartered in a KeyBank primary market., Have a strong track record of advancing affordable housing and/or small business development, and, Demonstrate the capacity to effectively manage and deploy grant funds in alignment with the Foundation’s goals., 3 platforms to facilitate loan administration and technical assistance for participants in the program (I'm thinking NED, Cyphr AI, and CreditHub)., use increments -create this visual and give it to Averi to use.) Also, they are using the same line of credit to handle personal and business expenses putting a lot of pressure on their finances but also creating bad financial habits of mixing business and personal. Access to affordable capital allows them to separate personal and business expenses which is good business practice; and allows them to reduce the burden that the business is putting on the business owner’s personal line of credit., shirts, etc. (over-simplification of our industrial presence, but you get what I mean), they will see sales decline. Additionally with the higher costs of components for their items, they are seeing smaller margins already (food service for sure)., interest rates, sometimes exceeding 350% APR, which can lead to substantial repayment burdens. The lack of regulatory oversight in the MCA industry often contributes to these high APRs, making them a risky financing option for many businesses., to-day operations and overall financial stability."https://davisbusinesslaw.com/merchant-cash-advance-fast-funding-for-small-businesses-but-beware-the-legal-perils/, Let’s talk about how FEI is helping to create a small business lending ecosystem by assessing small business financing needs in partnership with the Central Ohio African American Chamber of Commerce;, The impact of business credit on a business. What can they do with credit that they could not have done without it. How low income entrepreneurs don’t have access to business credit which them causes them to put expenses on their person cards which increases their utilization rate which then decreases their credit scores which causes them to be denied the business credit needed to grow. If they are approved it’s at a higher interest rate (pull data on business credit interest rate based on credit score - use increments -create this visual and give it to Averi to use.) Also, they are using the same line of credit to handle personal and business expenses putting a lot of pressure on their finances but also creating bad financial habits of mixing business and personal. Access to affordable capital allows them to separate personal and business expenses which is good business practice; and allows them to reduce the burden that the business is putting on the business owner’s personal line of credit., The uncertainty and inconsistency in federal policy is making it difficult for small businesses (and their customers) to forecast the economic outlook. People are already tightening their purse strings and eliminating discretionary spending. That hits our businesses extremely hard as many of them are B2C. If their customers don't need their manicures, hair appointments, custom t-shirts, etc. (over-simplification of our industrial presence, but you get what I mean), they will see sales decline. Additionally with the higher costs of components for their items, they are seeing smaller margins already (food service for sure)., "MCAs can incur extremely high-interest rates, sometimes exceeding 350% APR, which can lead to substantial repayment burdens. The lack of regulatory oversight in the MCA industry often contributes to these high APRs, making them a risky financing option for many businesses., The structure of MCA repayments can also strain a business’s cash flow. Since payments are deducted daily or weekly based on sales, businesses may find it challenging to manage their cash flow effectively, especially during slower periods. This daily repayment requirement can create a significant financial burden that affects day-to-day operations and overall financial stability."https://davisbusinesslaw.com/merchant-cash-advance-fast-funding-for-small-businesses-but-beware-the-legal-perils/, //davisbusinesslaw.com/merchant-cash-advance-fast-funding-for-small-businesses-but-beware-the-legal-perils/
+Funding Type: Unrestricted
+
+
+LANGUAGE ALIGNMENT ANALYSIS
+==============================
+Alignment Score: 0.00
+
+Recommendations:
+• Limited alignment - focus on connecting mission to funder priorities
+
+
+GRANT REQUEST
+===============
+We respectfully request funding from KeyBank Foundation to support Freedom Equity Inc.'s mission.
+
+This grant will enable us to expand our impact and better serve our community.

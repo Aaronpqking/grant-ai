@@ -1,0 +1,85 @@
+THEME EXPANSION ANALYSIS REPORT
+========================================
+
+Generated: 2025-05-29 21:22:53
+
+OVERALL COVERAGE: 22.4% (26/116 keywords)
+
+THEME-BY-THEME ANALYSIS:
+------------------------------
+
+CDFI OPERATIONS:
+  Coverage: 25.0%
+  Current Keywords: 16
+  Expansion Opportunities: 6
+  Priority Additions: predevelopment lending, acquisition lending, rehabilitation lending
+
+SMALL BUSINESS:
+  Coverage: 33.3%
+  Current Keywords: 15
+  Expansion Opportunities: 6
+  Priority Additions: business incubation, mentorship programs, business accelerator
+
+HOUSING:
+  Coverage: 8.3%
+  Current Keywords: 12
+  Expansion Opportunities: 6
+  Priority Additions: multifamily housing, single-family development, rental housing
+
+RACIAL EQUITY:
+  Coverage: 31.2%
+  Current Keywords: 16
+  Expansion Opportunities: 6
+  Priority Additions: systemic barriers, historical exclusion, wealth gap
+
+ECONOMIC DEVELOPMENT:
+  Coverage: 7.1%
+  Current Keywords: 14
+  Expansion Opportunities: 6
+  Priority Additions: neighborhood stabilization, commercial development, mixed-use development
+
+GEOGRAPHIC FOCUS:
+  Coverage: 17.6%
+  Current Keywords: 17
+  Expansion Opportunities: 6
+  Priority Additions: keybank markets, regional focus, statewide impact
+
+FINANCIAL SERVICES:
+  Coverage: 21.4%
+  Current Keywords: 14
+  Expansion Opportunities: 6
+  Priority Additions: debt counseling, financial planning, asset building
+
+COMMUNITY IMPACT:
+  Coverage: 33.3%
+  Current Keywords: 12
+  Expansion Opportunities: 6
+  Priority Additions: community partnership, stakeholder engagement, collective impact
+
+
+HIGH-IMPACT EXPANSION CATEGORIES:
+----------------------------------------
+
+Partnership & Collaboration:
+  Suggested Keywords: strategic partnerships, community partnerships, public-private partnerships, collaborative funding, consortium approach, collective impact
+
+Innovation & Technology:
+  Suggested Keywords: fintech solutions, digital banking, online lending platform, data analytics, artificial intelligence, blockchain technology
+
+Sustainability & Environment:
+  Suggested Keywords: green financing, sustainable development, environmental justice, climate resilience, renewable energy, energy efficiency
+
+Education & Workforce:
+  Suggested Keywords: workforce development, job training, financial literacy, entrepreneurship education, skill development, career pathways
+
+Health & Wellness:
+  Suggested Keywords: community health, healthcare access, wellness programs, mental health services, food security, healthy communities
+
+
+RECOMMENDATIONS:
+--------------------
+1. Focus on low-coverage themes for immediate impact
+2. Add high-impact expansion categories for broader reach
+3. Implement weighted scoring for theme importance
+4. Create industry-specific keyword sets
+5. Develop dynamic theme learning from successful grants

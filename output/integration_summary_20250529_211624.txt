@@ -1,0 +1,30 @@
+INTEGRATED GRANT BUILDER - COMPREHENSIVE TEST REPORT
+============================================================
+
+Generated: 2025-05-29 21:16:24
+
+DOCUMENT PROCESSING SUMMARY
+------------------------------
+Successfully Processed: 10
+  ✅ doc_1.docx
+  ✅ doc_11.docx
+  ✅ doc_7.docx
+  ✅ doc_6.docx
+  ✅ doc_5.docx
+  ✅ doc_4.docx
+  ✅ doc_3.docx
+  ✅ doc_2.docx
+  ✅ doc_9.pdf
+  ✅ doc_8.pdf
+
+Failed to Process: 0
+
+ORGANIZATION EXTRACTED
+Name: Freedom Equity Inc.
+Mission: The mission of Freedom Equity Inc. is to act as a community-based lending alternative that increases access to capital for Black business owners who have historically been left out of conventional len...
+Location: and sustainability of CDFIs that play a vital role in advancing affordable housing and small business development. We intend to award one $200,000 grant to an exemplary CDFI in each of our markets, recognizing their outstanding contributions to creating lasting, positive change. These grants will provide flexible operating funding to support CDFIs in achieving their broader mission of creating sustainable economic opportunities, whether through expanding services, strengthening infrastructure, or deepening community impact.
+
+FUNDER EXTRACTED
+Name: building vs. capacity building (see home analogy)
+Amount: $0
+Priorities: 0

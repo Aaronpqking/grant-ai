@@ -1,0 +1,17 @@
+name: Simple Test
+description: Basic test for Grant Agent evaluation
+pairs:
+  - user_query: "Can you help me write a grant proposal?"
+    expected_responses:
+      - "upload documents"
+      - "grant writing"
+      - "proposal"
+    reference_response: |
+      I'd be happy to help you write a grant proposal. To get started, could you please provide the following documents if you have them:
+      
+      1. Organization boilerplate or recent grant proposals (.docx)
+      2. Grant guidelines or CSR reports from funders (.pdf)
+      3. Logic models and evaluation plans (.docx)
+      4. Any other relevant documents
+      
+      This will help me understand your organization's mission, the funder's priorities, and any existing frameworks you're using. 

@@ -1,0 +1,31 @@
+COMPREHENSIVE GRANT BUILDER QUALITY REPORT
+==================================================
+
+Generated: 2025-05-29 21:58:45
+
+OVERALL QUALITY SCORE: 100.0/100
+
+ORGANIZATION EXTRACTION RESULTS:
+✅ Name: Freedom Equity Inc.
+✅ Mission Length: 612 chars
+✅ Location: Central Ohio
+✅ Background: Background 
+Auspices 
+Organization's Mission Statement 
+The mission of Freedom Equity Inc. is to act as a community-based lending alternative that increases access to capital for Black business owners who have historically been left out of conventional lending.
+Organization’s Background Summary  – Brief history, including number of year in existence, description of activities, achievements and community impact
+
+FUNDER EXTRACTION RESULTS:
+✅ Name: KeyBank Foundation
+✅ Amount: $13,000,000
+✅ Type: Unrestricted
+✅ Priorities: 6
+
+LANGUAGE ANALYSIS RESULTS:
+✅ Alignment Score: 1.00
+✅ Matching Themes: cdfi_operations, small_business, housing, racial_equity, geographic_focus, community_impact
+
+IMPROVEMENT RECOMMENDATIONS:
+• 💡 ENHANCEMENT: Expand keyword dictionaries for better theme matching
+• 💡 ENHANCEMENT: Add validation rules for extracted amounts
+• 💡 ENHANCEMENT: Implement cross-field consistency checks

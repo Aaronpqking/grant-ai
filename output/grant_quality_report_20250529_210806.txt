@@ -1,0 +1,53 @@
+GRANT QUALITY ANALYSIS AND VERIFICATION REPORT
+============================================================
+
+Generated: 2025-05-29 21:08:06
+
+OVERALL QUALITY SCORE: 10.0/100
+========================================
+
+ISSUES IDENTIFIED: 5
+------------------------------
+CRITICAL: 1
+  • Grant amount seems too low: $200
+    Fix: Review amount extraction patterns for $200K vs $200 distinction
+
+MAJOR: 4
+  • Organization location field contains funder information
+    Fix: Fix field assignment logic in extraction patterns
+  • No funder priorities extracted
+    Fix: Improve funding priorities extraction from funder documents
+  • Language alignment score is 0.0 - indicates poor keyword matching
+    Fix: Improve keyword extraction and theme matching algorithms
+  • No matching themes found between org and funder
+    Fix: Expand theme keyword dictionaries and improve text preprocessing
+
+MINOR: 0
+
+LANGUAGE/NARRATIVE ALIGNMENT VERIFICATION
+=============================================
+Alignment Score: 0.00
+Narrative Consistency: 0.70
+Keyword Matches: 
+Theme Overlap: 
+
+Missing Connections:
+  • Low thematic alignment between organization and funder
+  • No keyword overlap found
+
+IMPROVEMENT RECOMMENDATIONS
+==============================
+🚨 CRITICAL: Address data extraction failures first
+   • Grant amount seems too low: $200
+⚠️ MAJOR: Improve data quality and alignment
+   • Organization location field contains funder information
+   • No funder priorities extracted
+   • Language alignment score is 0.0 - indicates poor keyword matching
+💡 ENHANCEMENT: Expand keyword dictionaries for better theme matching
+💡 ENHANCEMENT: Add validation rules for extracted amounts
+💡 ENHANCEMENT: Implement cross-field consistency checks
+
+ALIGNMENT RECOMMENDATIONS
+=========================
+• Strengthen connection between organization mission and funder priorities
+• Use more specific keywords that align with funder language

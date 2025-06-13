@@ -1,0 +1,56 @@
+GRANT QUALITY ANALYSIS AND VERIFICATION REPORT
+============================================================
+
+Generated: 2025-05-29 21:16:24
+
+OVERALL QUALITY SCORE: 0.0/100
+========================================
+
+ISSUES IDENTIFIED: 5
+------------------------------
+CRITICAL: 2
+  • Grant amount seems too low: $0
+    Fix: Review amount extraction patterns for $200K vs $200 distinction
+  • No narrative generated
+    Fix: Ensure narrative generation service is working
+
+MAJOR: 3
+  • Organization location field contains funder information
+    Fix: Fix field assignment logic in extraction patterns
+  • No funder priorities extracted
+    Fix: Improve funding priorities extraction from funder documents
+  • No language analysis performed
+    Fix: Ensure language analysis service is called
+
+MINOR: 0
+
+LANGUAGE/NARRATIVE ALIGNMENT VERIFICATION
+=============================================
+Alignment Score: 0.00
+Narrative Consistency: 0.00
+Keyword Matches: 
+Theme Overlap: 
+
+Missing Connections:
+  • Low thematic alignment between organization and funder
+  • No keyword overlap found
+  • Limited mention of key entities in narrative
+
+IMPROVEMENT RECOMMENDATIONS
+==============================
+🚨 CRITICAL: Address data extraction failures first
+   • Grant amount seems too low: $0
+   • No narrative generated
+⚠️ MAJOR: Improve data quality and alignment
+   • Organization location field contains funder information
+   • No funder priorities extracted
+   • No language analysis performed
+💡 ENHANCEMENT: Expand keyword dictionaries for better theme matching
+💡 ENHANCEMENT: Add validation rules for extracted amounts
+💡 ENHANCEMENT: Implement cross-field consistency checks
+
+ALIGNMENT RECOMMENDATIONS
+=========================
+• Strengthen connection between organization mission and funder priorities
+• Use more specific keywords that align with funder language
+• Increase references to organization and funder in narrative
