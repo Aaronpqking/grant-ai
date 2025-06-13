@@ -1,0 +1,36 @@
+# Core FastAPI and async dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Google Cloud dependencies - using compatible versions
+google-cloud-aiplatform==1.71.1
+google-cloud-storage==2.10.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+
+# Vertex AI and Generative AI - compatible with aiplatform version
+vertexai==1.71.1
+
+# Async file operations
+aiofiles==23.2.1
+aiohttp==3.9.1
+
+# Document processing
+python-multipart==0.0.6
+python-docx==1.1.0
+PyPDF2==3.0.1
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# Logging and monitoring
+structlog==23.2.0
+
+# Data processing - using stable versions for Python 3.11
+pandas==2.1.4
+numpy==1.24.3
+
+# Additional utilities
+httpx==0.25.2 
