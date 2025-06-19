@@ -1,4 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Grant AI Proposal Builder Frontend
+
+A Next.js frontend application for the Grant AI system, designed to help users create high-quality grant proposals using AI assistance.
+
+## Features
+
+- Interactive proposal builder
+- Document upload and analysis
+- AI-powered grant writing assistance
+- Real-time feedback and suggestions
+- Quick and comprehensive proposal options
+
+## Tech Stack
+
+- Next.js 15.3.3
+- React 19
+- Tailwind CSS
+- Inter font (Google Fonts)
+
+## Deployment to Vercel
+
+### Option 1: Automatic Deployment via GitHub
+
+1. Push your changes to GitHub
+2. Log in to your Vercel account
+3. Connect your GitHub repository
+4. Select the `Grant_Agent_Vertex_Native/grant-proposal-frontend` directory as the root
+5. Configure build settings:
+   - Framework: Next.js
+   - Root Directory: `Grant_Agent_Vertex_Native/grant-proposal-frontend`
+6. Deploy
+
+### Option 2: Using Vercel CLI
+
+1. Install Vercel CLI: `npm install -g vercel`
+2. Navigate to the frontend directory: `cd Grant_Agent_Vertex_Native/grant-proposal-frontend`
+3. Run the deployment script: `./vercel-deploy.sh`
+
+### Environment Variables
+
+Set these environment variables in your Vercel project settings:
+
+- `NEXT_PUBLIC_API_URL`: URL of your backend API
+- `NEXT_PUBLIC_APP_ENV`: Set to `production` for production deployment
+
+## Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+## Font Configuration
+
+This project uses the Inter font from Google Fonts. The font is configured in:
+- `src/app/layout.tsx` - Font import and variable setup
+- `tailwind.config.js` - Font family configuration
+- `src/app/globals.css` - CSS variables and base styles
+
+## License
+
+Proprietary - All rights reserved
 
 ## Getting Started
 
