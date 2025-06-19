@@ -191,7 +191,10 @@ export function QuickProposalForm() {
 
   const isStepComplete = (stepIndex: number) => {
     const step = steps[stepIndex]
-    return step.fields.every(field => formData[field as keyof FormData].trim() !== '')
+    return step.fields.every(field => {
+      const value = formData[field as keyof FormData];
+      return value !== undefined && value !== null && value.toString().trim() !== '';
+    })
   }
 
   const generateProposal = async () => {
