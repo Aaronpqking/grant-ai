@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { } from 'lucide-react'
+import { PlusCircle, FileText, Clock, TrendingUp, DollarSign, Target } from 'lucide-react'
 import Link from 'next/link'
 import { grantAPI } from '@/lib/api'
 
