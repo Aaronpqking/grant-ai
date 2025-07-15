@@ -175,3 +175,34 @@ docs/site
 
 # VS Code Personal Settings
 .vscode/settings.json
+
+# Environment and secret files
+.env
+.env.local
+.env.backup
+.env.production
+.env.development
+*.env
+config.env
+*.key
+*.pem
+*.p12
+*.json
+!requirements.txt
+!package.json
+!tsconfig.json
+!*.example.json
+
+# API Keys and credentials
+*secret*
+*key*
+*credential*
+client_secret_*.json
+service_account*.json
+!service_account.json.example
+
+# Logs and temporary files
+logs/
+*.log
+tmp/
+temp/
