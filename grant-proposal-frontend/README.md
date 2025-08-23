@@ -86,6 +86,16 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Deployment (merged)
+
+Deployment instructions are available in `DEPLOYMENT.md`. Key steps:
+
+- Push to GitHub and import the repo into Vercel
+- Set framework preset to Next.js and root directory to the frontend path
+- Configure `next build` as the build command
+- Add environment variables (e.g., `NEXT_PUBLIC_API_URL`)
+- Deploy and obtain the public URL
+
 ## Sample Test Data
 
 To quickly test the applications, you can use this sample data:
