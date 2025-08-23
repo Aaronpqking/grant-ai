@@ -136,15 +136,26 @@ export function FullProposalBuilder() {
   const updateExecutiveDirectorContact = (field: 'name' | 'title' | 'email' | 'phone', value: string) => {
     setFormData(prev => ({
       ...prev,
-      organization: { ...prev.organization, contact_person: field === 'name' ? value : prev.organization.contact_person, contact_title: field === 'title' ? value : prev.organization.contact_title, contact_email: field === 'email' ? value : prev.organization.contact_email, contact_phone: field === 'phone' ? value : prev.organization.contact_phone }
+      organization: {
+        ...prev.organization,
+        executive_director_name: field === 'name' ? value : prev.organization.executive_director_name,
+        executive_director_title: field === 'title' ? value : prev.organization.executive_director_title,
+        executive_director_email: field === 'email' ? value : prev.organization.executive_director_email,
+        executive_director_phone: field === 'phone' ? value : prev.organization.executive_director_phone,
+      }
     }))
   }
 
   const updateGrantContact = (field: 'name' | 'title' | 'email' | 'phone', value: string) => {
-    // store grant contact in organization.contact_person if needed or extend schema later
     setFormData(prev => ({
       ...prev,
-      organization: { ...prev.organization, contact_person: field === 'name' ? value : prev.organization.contact_person, contact_title: field === 'title' ? value : prev.organization.contact_title, contact_email: field === 'email' ? value : prev.organization.contact_email, contact_phone: field === 'phone' ? value : prev.organization.contact_phone }
+      organization: {
+        ...prev.organization,
+        grant_contact_name: field === 'name' ? value : prev.organization.grant_contact_name,
+        grant_contact_title: field === 'title' ? value : prev.organization.grant_contact_title,
+        grant_contact_email: field === 'email' ? value : prev.organization.grant_contact_email,
+        grant_contact_phone: field === 'phone' ? value : prev.organization.grant_contact_phone,
+      }
     }))
   }
 
@@ -480,33 +491,88 @@ export function FullProposalBuilder() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Executive Director Name</label>
                   <input
                     type="text"
-                    value={formData.organization.contact_person}
-                    onChange={(e) => updateOrganization('contact_person', e.target.value)}
+                    value={formData.organization.executive_director_name || ''}
+                    onChange={(e) => updateExecutiveDirectorContact('name', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Full name"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Executive Director Title</label>
+                  <input
+                    type="text"
+                    value={formData.organization.executive_director_title || ''}
+                    onChange={(e) => updateExecutiveDirectorContact('title', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Title"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Executive Director Email</label>
                   <input
                     type="email"
-                    value={formData.organization.contact_email}
-                    onChange={(e) => updateOrganization('contact_email', e.target.value)}
+                    value={formData.organization.executive_director_email || ''}
+                    onChange={(e) => updateExecutiveDirectorContact('email', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="email@organization.org"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Contact Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Executive Director Phone</label>
                   <input
                     type="tel"
-                    value={formData.organization.contact_phone}
-                    onChange={(e) => updateOrganization('contact_phone', e.target.value)}
+                    value={formData.organization.executive_director_phone || ''}
+                    onChange={(e) => updateExecutiveDirectorContact('phone', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Grant Contact Name</label>
+                  <input
+                    type="text"
+                    value={formData.organization.grant_contact_name || ''}
+                    onChange={(e) => updateGrantContact('name', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Grant Contact Title</label>
+                  <input
+                    type="text"
+                    value={formData.organization.grant_contact_title || ''}
+                    onChange={(e) => updateGrantContact('title', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Title"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Grant Contact Email</label>
+                  <input
+                    type="email"
+                    value={formData.organization.grant_contact_email || ''}
+                    onChange={(e) => updateGrantContact('email', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="email@organization.org"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Grant Contact Phone</label>
+                  <input
+                    type="tel"
+                    value={formData.organization.grant_contact_phone || ''}
+                    onChange={(e) => updateGrantContact('phone', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="(555) 123-4567"
                   />
@@ -529,6 +595,16 @@ export function FullProposalBuilder() {
                     onChange={(e) => updateFunder('name', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Foundation or funding organization name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Funder Website</label>
+                  <input
+                    type="url"
+                    value={formData.funder.website || ''}
+                    onChange={(e) => updateFunder('website', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="https://"
                   />
                 </div>
                 
