@@ -11,6 +11,11 @@ export interface QuickProposalRequest {
   funder_name: string
   amount_requested: string
   project_description: string
+  vision?: string
+  outcomes?: string
+  activities?: string
+  resources?: string
+  uploaded_documents?: any[]
 }
 
 export interface FullProposalRequest {
@@ -25,6 +30,11 @@ export interface ProposalResponse {
   proposal: string
   timestamp: string
   grant_type?: string
+  summary?: string
+  grade?: {
+    score: number
+    rationale?: string
+  }
 }
 
 export class GrantAPI {

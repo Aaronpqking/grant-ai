@@ -14,13 +14,18 @@ interface FormData {
   uploadedFiles?: { name: string; url: string; status: 'uploaded' | 'failed' }[]
 }
 
-export function QuickProposalForm() {
+export function ProgramBuilderForm() {
   const [formData, setFormData] = useState<FormData>({
     organization_name: '',
     project_title: '',
     funder_name: '',
     amount_requested: '',
     project_description: '',
+    // Program Builder specific fields
+    vision: '',
+    outcomes: '',
+    activities: '',
+    resources: '',
     documents: [],
     uploadedFiles: []
   })
@@ -36,6 +41,7 @@ export function QuickProposalForm() {
 
   const steps = [
     { title: 'Organization Info', fields: ['organization_name'] },
+    { title: 'Program Design', fields: ['vision', 'outcomes', 'activities', 'resources'] },
     { title: 'Project Details', fields: ['project_title', 'project_description'] },
     { title: 'Funding Details', fields: ['funder_name', 'amount_requested'] },
     { title: 'Review & Generate', fields: [] }
@@ -197,10 +203,13 @@ export function QuickProposalForm() {
     })
   }
 
+  const [generationProgress, setGenerationProgress] = useState(0)
+
   const generateProposal = async () => {
     try {
       setIsGenerating(true)
       setError('')
+      setGenerationProgress(0)
       
       // Use already uploaded files (no upload during generation!)
       const uploadedFileInfo = formData.uploadedFiles?.filter(file => file.status === 'uploaded') || []
@@ -213,9 +222,18 @@ export function QuickProposalForm() {
         uploaded_documents: uploadedFileInfo
       }
       
+      // Simulate progress while waiting for AI response
+      const progressInterval = setInterval(() => {
+        setGenerationProgress((p) => Math.min(95, p + Math.floor(Math.random() * 10) + 5))
+      }, 400)
+
       const response = await grantAPI.generateQuickProposal(proposalData)
-      
+
+      clearInterval(progressInterval)
+      setGenerationProgress(100)
+
       if (response.success) {
+        // If API returns an AI summary/grade, capture it
         setGeneratedProposal(response.proposal)
         
         // Save to localStorage for demo
@@ -236,7 +254,11 @@ export function QuickProposalForm() {
       console.error('Proposal generation error:', err)
       setError('Error connecting to AI service. Please check your connection and try again.')
     } finally {
-      setIsGenerating(false)
+      // brief delay to let progress bar reach 100%
+      setTimeout(() => {
+        setIsGenerating(false)
+        setGenerationProgress(0)
+      }, 400)
     }
   }
 
@@ -323,9 +345,9 @@ export function QuickProposalForm() {
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             <Sparkles className="w-6 h-6 mr-3 text-blue-600" />
-            Quick Proposal Generator
+            Program Builder
           </h2>
-          <p className="text-gray-600 mt-1">Generate a compelling grant proposal in minutes</p>
+          <p className="text-gray-600 mt-1">Design your program and generate a proposal-ready summary</p>
         </div>
 
         {/* Progress Indicator */}
@@ -353,6 +375,16 @@ export function QuickProposalForm() {
           <div className="text-sm text-gray-600">
             Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
           </div>
+
+          {/* Generation progress bar */}
+          {isGenerating && (
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${generationProgress}%` }} />
+              </div>
+              <div className="text-xs text-gray-600 mt-1">Generating proposal: {generationProgress}%</div>
+            </div>
+          )}
         </div>
 
         {/* Form Content */}

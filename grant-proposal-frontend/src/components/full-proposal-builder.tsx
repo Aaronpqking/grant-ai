@@ -13,8 +13,17 @@ interface OrganizationData {
   address: string
   website: string
   contact_person: string
+  contact_title: string
   contact_email: string
   contact_phone: string
+  executive_director_name?: string
+  executive_director_title?: string
+  executive_director_email?: string
+  executive_director_phone?: string
+  grant_contact_name?: string
+  grant_contact_title?: string
+  grant_contact_email?: string
+  grant_contact_phone?: string
 }
 
 interface FunderData {
@@ -25,6 +34,7 @@ interface FunderData {
   amount_max: string
   focus_areas: string
   requirements: string
+  website?: string
 }
 
 interface ProjectData {
@@ -72,6 +82,7 @@ export function FullProposalBuilder() {
       address: '',
       website: '',
       contact_person: '',
+      contact_title: '',
       contact_email: '',
       contact_phone: ''
     },
@@ -83,6 +94,7 @@ export function FullProposalBuilder() {
       amount_max: '',
       focus_areas: '',
       requirements: ''
+    , website: ''
     },
     project: {
       title: '',
@@ -117,6 +129,22 @@ export function FullProposalBuilder() {
     setFormData(prev => ({
       ...prev,
       organization: { ...prev.organization, [field]: value }
+    }))
+  }
+
+  // New helpers for separate contacts
+  const updateExecutiveDirectorContact = (field: 'name' | 'title' | 'email' | 'phone', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      organization: { ...prev.organization, contact_person: field === 'name' ? value : prev.organization.contact_person, contact_title: field === 'title' ? value : prev.organization.contact_title, contact_email: field === 'email' ? value : prev.organization.contact_email, contact_phone: field === 'phone' ? value : prev.organization.contact_phone }
+    }))
+  }
+
+  const updateGrantContact = (field: 'name' | 'title' | 'email' | 'phone', value: string) => {
+    // store grant contact in organization.contact_person if needed or extend schema later
+    setFormData(prev => ({
+      ...prev,
+      organization: { ...prev.organization, contact_person: field === 'name' ? value : prev.organization.contact_person, contact_title: field === 'title' ? value : prev.organization.contact_title, contact_email: field === 'email' ? value : prev.organization.contact_email, contact_phone: field === 'phone' ? value : prev.organization.contact_phone }
     }))
   }
 
@@ -589,24 +617,20 @@ export function FullProposalBuilder() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Executive Summary</label>
-                  <textarea
-                    value={formData.project.summary}
-                    onChange={(e) => updateProject('summary', e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Brief overview of the project (2-3 paragraphs)"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Executive Summary (AI-generated)</label>
+                  <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-800">
+                    {formData.project.summary || 'AI summary will appear here after running Program Builder or Full Proposal generation.'}
+                  </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Statement of Need</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">What problem are we solving? (Statement of Need)</label>
                   <textarea
                     value={formData.project.statement_of_need}
                     onChange={(e) => updateProject('statement_of_need', e.target.value)}
                     rows={5}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Describe the problem or need your project addresses"
+                    placeholder="In simple terms, explain the problem your program addresses"
                   />
                 </div>
                 
@@ -857,13 +881,13 @@ export function FullProposalBuilder() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Methodology</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">How will this work? (Methodology)</label>
                   <textarea
                     value={formData.project.methodology}
                     onChange={(e) => updateProject('methodology', e.target.value)}
                     rows={4}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="How you will implement the project"
+                    placeholder="Describe how you'll carry out the program in everyday language"
                   />
                 </div>
                 

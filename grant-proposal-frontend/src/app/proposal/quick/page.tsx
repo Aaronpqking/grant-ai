@@ -1,5 +1,5 @@
-import { QuickProposalForm } from '@/components/quick-proposal-form'
- 
-export default function QuickProposalPage() {
-  return <QuickProposalForm />
-} 
+import { ProgramBuilderForm } from '@/components/quick-proposal-form'
+
+export default function ProgramBuilderPage() {
+  return <ProgramBuilderForm />
+}

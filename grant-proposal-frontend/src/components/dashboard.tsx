@@ -151,12 +151,12 @@ export function Dashboard() {
                   <Target className="w-8 h-8 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Quick Proposal</h3>
-                  <p className="text-gray-600">Generate a proposal in under 5 minutes</p>
+                  <h3 className="text-xl font-semibold text-gray-900">Program Builder</h3>
+                  <p className="text-gray-600">Design your program and generate a proposal-ready summary</p>
                 </div>
               </div>
-              <p className="text-gray-700">Perfect for time-sensitive applications. Just provide basic information and let our AI create a compelling proposal.</p>
-              <div className="mt-4 text-blue-600 font-medium group-hover:text-blue-700">Start Quick Proposal →</div>
+              <p className="text-gray-700">Perfect for quick program design; provide core program details and let AI help frame them for funders.</p>
+              <div className="mt-4 text-blue-600 font-medium group-hover:text-blue-700">Start Program Builder →</div>
             </div>
           </Link>
 
