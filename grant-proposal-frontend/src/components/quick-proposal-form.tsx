@@ -38,6 +38,7 @@ export function ProgramBuilderForm() {
   const [uploadStatus, setUploadStatus] = useState<'none' | 'uploading' | 'success' | 'failed'>('none')
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
+  const [logicModel, setLogicModel] = useState<Record<string, any> | null>(null)
 
   const steps = [
     { title: 'Organization Info', fields: ['organization_name'] },
@@ -111,6 +112,9 @@ export function ProgramBuilderForm() {
           documents: [...(prev.documents || []), ...newFiles]
         }))
 
+        // Attempt to autofill program fields from uploaded JSON/CSV files before sending to backend
+        await processLocalFilesForAutofill(newFiles)
+
         // Initialize progress tracking - start upload immediately
         const progressMap: { [key: string]: number } = {}
         newFiles.forEach(file => {
@@ -178,6 +182,111 @@ export function ProgramBuilderForm() {
         setIsUploading(false)
         setUploadProgress({})
       }
+    }
+  }
+
+  // Read local files (CSV/JSON) and autofill program fields when possible
+  const processLocalFilesForAutofill = async (files: File[]) => {
+    for (const file of files) {
+      const name = file.name.toLowerCase()
+      if (name.endsWith('.json')) {
+        try {
+          const text = await file.text()
+          const json = JSON.parse(text)
+          autofillFromJson(json)
+        } catch (e) {
+          console.warn('Failed to parse JSON file for autofill', file.name, e)
+        }
+      } else if (name.endsWith('.csv')) {
+        try {
+          const text = await file.text()
+          const parsed = parseCsvToObjects(text)
+          // If parsed is an array of responses, take the first or merge
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            autofillFromJson(parsed[0])
+          }
+        } catch (e) {
+          console.warn('Failed to parse CSV file for autofill', file.name, e)
+        }
+      }
+    }
+  }
+
+  const parseCsvToObjects = (csvText: string) => {
+    const lines = csvText.split(/\r?\n/).filter(Boolean)
+    if (lines.length === 0) return []
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    const rows = lines.slice(1)
+    return rows.map(row => {
+      const cols = row.split(',')
+      const obj: Record<string, string> = {}
+      headers.forEach((h, i) => { obj[h] = (cols[i] || '').trim() })
+      return obj
+    })
+  }
+
+  const autofillFromJson = (data: any) => {
+    // Basic mapping heuristics from common Google Forms export names
+    const mappingCandidates = {
+      vision: ['vision', 'program vision', 'what is your vision'],
+      outcomes: ['outcomes', 'expected outcomes', 'results'],
+      activities: ['activities', 'what activities', 'implementation'],
+      resources: ['resources', 'what resources', 'budget needs']
+    }
+
+    const updates: Partial<FormData> = {}
+    for (const [field, keys] of Object.entries(mappingCandidates)) {
+      for (const k of keys) {
+        const foundKey = Object.keys(data).find(dk => dk.toLowerCase().includes(k))
+        if (foundKey && data[foundKey]) {
+          // @ts-ignore
+          updates[field as keyof FormData] = data[foundKey]
+          break
+        }
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      setFormData(prev => ({ ...prev, ...updates }))
+      // Generate a logic model automatically
+      const lm = generateLogicModel((updates.outcomes as unknown as string) || (formData.outcomes as unknown as string))
+      setLogicModel(lm)
+    }
+  }
+
+  const generateLogicModel = (outcomesText?: string) => {
+    if (!outcomesText) return null
+    const outcomes = outcomesText.split(/\n|;|\.|\u2022/).map(s => s.trim()).filter(Boolean)
+    const model: Record<string, any> = { outcomes: [], activities: {}, resources: {} }
+    outcomes.forEach((outcome, idx) => {
+      const key = `Outcome ${idx + 1}`
+      model.outcomes.push({ key, text: outcome })
+      // Heuristic activity generation
+      model.activities[key] = [
+        `Activity to achieve: ${outcome.split(' ')[0]} and engage stakeholders`,
+        `Monitoring & evaluation activities for: ${outcome}`
+      ]
+      model.resources[key] = [
+        'Staff time (FTE)',
+        'Materials and supplies',
+        'Small equipment or software'
+      ]
+    })
+    return model
+  }
+
+  const handleImportFile = async (file: File | null) => {
+    if (!file) return
+    try {
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const json = JSON.parse(await file.text())
+        autofillFromJson(json)
+      } else if (file.name.toLowerCase().endsWith('.csv')) {
+        const parsed = parseCsvToObjects(await file.text())
+        if (parsed.length > 0) autofillFromJson(parsed[0])
+      }
+    } catch (e) {
+      console.error('Import failed', e)
     }
   }
 
@@ -272,6 +381,17 @@ export function ProgramBuilderForm() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  // Expose logic model preview in UI
+  const LogicModelPreview = ({ model }: { model: Record<string, any> | null }) => {
+    if (!model) return null
+    return (
+      <div className="mt-4 bg-white border rounded-lg p-4">
+        <h4 className="font-semibold mb-2">Logic Model (auto-generated)</h4>
+        <pre className="text-sm text-gray-800 whitespace-pre-wrap">{JSON.stringify(model, null, 2)}</pre>
+      </div>
+    )
   }
 
   if (generatedProposal) {

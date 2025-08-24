@@ -70,6 +70,7 @@ export function FullProposalBuilder() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState('')
   const [generatedProposal, setGeneratedProposal] = useState('')
+  const [generationProgress, setGenerationProgress] = useState(0)
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [isUploading, setIsUploading] = useState(false)
   
@@ -189,6 +190,9 @@ export function FullProposalBuilder() {
           }
         }))
 
+        // Attempt autofill from uploaded CSV/JSON before sending to backend
+        await processLocalFilesForAutofill(newFiles)
+
         // Initialize progress tracking
         const progressMap: { [key: string]: number } = {}
         newFiles.forEach(file => {
@@ -266,6 +270,7 @@ export function FullProposalBuilder() {
   const generateFullProposal = async () => {
     try {
       setIsGenerating(true)
+      setGenerationProgress(0)
       setError('')
       
       // Prepare data for API
@@ -282,10 +287,27 @@ export function FullProposalBuilder() {
         }
       }
       
+      // If backend supports streaming/progress, use stream; otherwise use normal call
+      // Simulate progress while waiting for backend
+      const progressInterval = setInterval(() => {
+        setGenerationProgress((p) => Math.min(95, p + Math.floor(Math.random() * 10) + 5))
+      }, 400)
+
       const response = await grantAPI.generateFullProposal(requestData)
+
+      clearInterval(progressInterval)
+      setGenerationProgress(100)
       
       if (response.success) {
         setGeneratedProposal(response.proposal)
+        // Capture AI summary/grade if provided
+        if (response.summary) {
+          setFormData(prev => ({ ...prev, project: { ...prev.project, summary: response.summary } }))
+        }
+        if (response.grade) {
+          // Store grade info locally or use to display badge
+          console.log('AI grade:', response.grade)
+        }
         
         // Save to localStorage
         const savedProposals = JSON.parse(localStorage.getItem('grantProposals') || '[]')
@@ -1142,16 +1164,21 @@ export function FullProposalBuilder() {
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  {isGenerating ? (
-                    <Loader className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <FileText className="w-5 h-5" />
-                  )}
+                  <FileText className="w-5 h-5" />
                   <span>
                     {isGenerating ? 'Generating Full Proposal...' : 'Generate Full Proposal'}
                   </span>
                 </button>
               </div>
+              {/* Show progress bar when generating */}
+              {isGenerating && (
+                <div className="mt-4 px-6">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${generationProgress}%` }} />
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1 text-center">Generating: {generationProgress}%</div>
+                </div>
+              )}
             </div>
           )}
         </div>
