@@ -32,6 +32,8 @@ export function ProgramBuilderForm() {
   
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedProposal, setGeneratedProposal] = useState('')
+  const [aiSummary, setAiSummary] = useState<string | null>(null)
+  const [aiGrade, setAiGrade] = useState<{ score: number; rationale?: string } | null>(null)
   const [error, setError] = useState('')
   const [currentStep, setCurrentStep] = useState(0)
   const [suggestions, setSuggestions] = useState<Record<string, string[]>>({})
@@ -47,6 +49,22 @@ export function ProgramBuilderForm() {
     { title: 'Funding Details', fields: ['funder_name', 'amount_requested'] },
     { title: 'Review & Generate', fields: [] }
   ]
+
+  // Import from Google Forms / Sheets public CSV URL
+  const importFromUrl = async (url: string) => {
+    try {
+      const resp = await fetch(url)
+      if (!resp.ok) throw new Error('Failed to fetch URL')
+      const text = await resp.text()
+      const parsed = parseCsvToObjects(text)
+      if (parsed.length > 0) {
+        autofillFromJson(parsed[0])
+      }
+    } catch (e) {
+      console.error('Import failed', e)
+      setError('Failed to import from provided URL')
+    }
+  }
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -344,12 +362,16 @@ export function ProgramBuilderForm() {
       if (response.success) {
         // If API returns an AI summary/grade, capture it
         setGeneratedProposal(response.proposal)
-        
+        setAiSummary(response.summary || null)
+        setAiGrade(response.grade || null)
+
         // Save to localStorage for demo
         const savedProposals = JSON.parse(localStorage.getItem('grantProposals') || '[]')
         savedProposals.push({
           ...formData,
           proposal: response.proposal,
+          summary: response.summary || null,
+          grade: response.grade || null,
           timestamp: new Date().toISOString(),
           status: 'completed',
           id: Date.now(),
