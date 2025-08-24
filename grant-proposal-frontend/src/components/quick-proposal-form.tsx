@@ -394,15 +394,82 @@ export function ProgramBuilderForm() {
   }
 
   const downloadProposal = () => {
-    const blob = new Blob([generatedProposal], { type: 'text/plain' })
+    // Default export: Word (.docx) wrapper containing plain text
+    const content = generatedProposal || ''
+    const blob = new Blob([content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${formData.project_title || 'grant-proposal'}.txt`
+    a.download = `${(formData.project_title || 'grant-proposal').replace(/\s+/g, '_')}.docx`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+  }
+
+  const exportToGoogleDocs = async () => {
+    try {
+      setIsGenerating(true)
+      const resp = await fetch('/api/export/google-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: formData.project_title, content: generatedProposal })
+      })
+      const json = await resp.json()
+      if (resp.ok) {
+        // Open the returned document link if available
+        if (json.url) window.open(json.url, '_blank')
+      } else {
+        setError(json.message || 'Failed to export to Google Docs')
+      }
+    } catch (e) {
+      console.error(e)
+      setError('Export to Google Docs failed')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const exportLogicModelJson = () => {
+    if (!logicModel) return
+    const blob = new Blob([JSON.stringify(logicModel, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${(formData.project_title || 'logic_model').replace(/\s+/g, '_')}_logic_model.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const exportLogicModelSvg = () => {
+    if (!logicModel) return
+    // Minimal SVG generation: list outcomes as boxes
+    const width = 800
+    const boxHeight = 40
+    const padding = 16
+    const outcomes = logicModel.outcomes || []
+    const height = outcomes.length * (boxHeight + padding) + padding
+    const boxes = outcomes.map((o: any, i: number) => {
+      const y = padding + i * (boxHeight + padding)
+      return `<rect x="20" y="${y}" width="760" height="${boxHeight}" fill="#f8fafc" stroke="#cbd5e1" rx="6" />` +
+        `<text x="40" y="${y + 25}" font-family="Inter, sans-serif" font-size="14" fill="#0f172a">${escapeXml(o.text)}</text>`
+    }).join('\n')
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` + boxes + '</svg>'
+    const blob = new Blob([svg], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${(formData.project_title || 'logic_model').replace(/\s+/g, '_')}_logic_model.svg`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const escapeXml = (unsafe: string) => {
+    return unsafe.replace(/[<>&'\"]/g, (c) => ({'<':'&lt;', '>':'&gt;', '&':'&amp;', "'":"&apos;", '"':'&quot;' } as any)[c])
   }
 
   // Expose logic model preview in UI

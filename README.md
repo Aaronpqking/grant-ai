@@ -39,4 +39,13 @@ Notes
 - Duplicate files consolidated from the previous working copy. A backup agent was moved to `grant-ai-repo/archive/`.
 - Local virtualenvs were removed from the repository trees and added to `.gitignore`.
 
+Google Docs export
+
+This project includes a stub API at `grant-proposal-frontend/src/pages/api/export/google-docs.ts` that demonstrates how to export generated proposals to Google Docs. To enable this in production:
+
+1. Create a Google Cloud service account with Drive and Docs API access.
+2. Grant the service account access to a Drive folder or use domain-wide delegation.
+3. Install and use `googleapis` to create a document and return the shareable link from the API endpoint.
+
+
 
