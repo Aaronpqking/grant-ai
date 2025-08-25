@@ -18,6 +18,9 @@ const nextConfig = {
       // Add any other domains you need to load images from
     ],
   },
+  env: {
+    NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL: process.env.ENABLE_QUICK_PROPOSAL || 'false'
+  },
   async headers() {
     return [
       {

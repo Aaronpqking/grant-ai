@@ -614,6 +614,10 @@ class VertexGrantAgentService:
             logger.info(f"📊 Input data: {data}")
             
             try:
+                # Feature flag: quick proposal can be disabled in production
+                if os.getenv('ENABLE_QUICK_PROPOSAL', 'true').lower() != 'true':
+                    raise HTTPException(status_code=403, detail='Quick proposal feature is disabled')
+
                 # Extract basic info
                 organization_name = data.get('organization_name', 'Your Organization')
                 project_title = data.get('project_title', 'Grant Project')

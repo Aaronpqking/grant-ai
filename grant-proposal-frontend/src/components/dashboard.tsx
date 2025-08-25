@@ -144,7 +144,39 @@ export function Dashboard() {
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Link href="/proposal/quick" className="group">
+          {process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL === 'true' && (
+            <Link href="/proposal/quick" className="group">
+              <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100 hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="bg-blue-100 p-4 rounded-lg group-hover:bg-blue-200 transition-colors">
+                    <Target className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">Program Builder</h3>
+                    <p className="text-gray-600">Design your program and generate a proposal-ready summary</p>
+                  </div>
+                </div>
+                <p className="text-gray-700">Perfect for quick program design; provide core program details and let AI help frame them for funders.</p>
+                <div className="mt-4 text-blue-600 font-medium group-hover:text-blue-700">Start Program Builder →</div>
+              </div>
+            </Link>
+          )}
+          {!process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL || process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL !== 'true' ? (
+            <div className="group">
+              <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="bg-blue-100 p-4 rounded-lg">
+                    <Target className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">Program Builder</h3>
+                    <p className="text-gray-600">Design your program and generate a proposal-ready summary</p>
+                  </div>
+                </div>
+                <p className="text-gray-700">Program Builder is enabled. Quick Proposal is deprecated.</p>
+              </div>
+            </div>
+          )}
             <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100 hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
               <div className="flex items-center space-x-4 mb-4">
                 <div className="bg-blue-100 p-4 rounded-lg group-hover:bg-blue-200 transition-colors">
