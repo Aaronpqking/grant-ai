@@ -1,0 +1,51 @@
+name: ci
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'grant-proposal-frontend/**'
+      - '**.py'
+      - 'requirements.txt'
+
+jobs:
+  frontend:
+    name: frontend-build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: grant-proposal-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'grant-proposal-frontend/package-lock.json'
+      - name: Install deps
+        run: npm ci --no-audit --no-fund
+      - name: Lint (strict)
+        run: npm run lint:strict
+      - name: Build (prod)
+        run: npm run build:prod
+
+  backend:
+    name: backend-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Run tests
+        run: pytest -q
+
+

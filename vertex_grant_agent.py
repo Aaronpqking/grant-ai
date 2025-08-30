@@ -43,6 +43,17 @@ logger = logging.getLogger(__name__)
 FIRESTORE_AVAILABLE = bool(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
 
 
+# Unified logging helpers with request-id parity
+def log_info(request: Request, msg: str, **kw):
+    rid = getattr(request.state, "request_id", "-") if request else "-"
+    logger.info(json.dumps({"request_id": rid, "msg": msg, **kw}))
+
+
+def log_error(request: Request, msg: str, **kw):
+    rid = getattr(request.state, "request_id", "-") if request else "-"
+    logger.error(json.dumps({"request_id": rid, "msg": msg, **kw}))
+
+
 # ---------------------------
 # Pydantic Models (lean V1)
 # ---------------------------
@@ -836,17 +847,14 @@ class VertexGrantAgentService:
         
         class RequestIDMiddleware(BaseHTTPMiddleware):
             async def dispatch(self, request: Request, call_next):
-                rid = request.headers.get('X-Request-ID') or uuid.uuid4().hex[:10]
+                rid = request.headers.get('x-request-id') or uuid.uuid4().hex
+                request.state.request_id = rid
                 t0 = time.time()
                 response = await call_next(request)
                 response.headers['X-Request-ID'] = rid
                 t1 = time.time()
                 try:
-                    logger.info(json.dumps({
-                        "request_id": rid,
-                        "path": str(request.url.path),
-                        "latency_ms": round((t1 - t0) * 1000, 2)
-                    }))
+                    logger.info(json.dumps({"request_id": rid, "path": str(request.url.path), "latency_ms": round((t1 - t0) * 1000, 2)}))
                 except Exception:
                     pass
                 return response
@@ -885,8 +893,7 @@ class VertexGrantAgentService:
         
         
         @self.app.post("/proposals")
-        async def create_proposal(req: Dict[str, Any]):
-            request_id = uuid.uuid4().hex[:10]
+        async def create_proposal(req: Dict[str, Any], request: Request):
             try:
                 # Validate/Create initial input
                 initial = req.get('initialInput') or {}
@@ -902,24 +909,21 @@ class VertexGrantAgentService:
                     sections=sections,
                 )
                 await self.dao.create_draft(draft)
-                logger.info(json.dumps({"request_id": request_id, "event": "create_proposal", "draft_id": draft_id}))
+                log_info(request, "create_proposal", draft_id=draft_id)
                 resp = JSONResponse({"success": True, "draft": json.loads(draft.json())})
-                resp.headers["X-Request-ID"] = request_id
                 return resp
             except Exception as e:
                 logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
                 raise HTTPException(status_code=500, detail="Failed to create proposal")
 
         @self.app.get("/proposals/{draft_id}")
-        async def get_proposal(draft_id: str):
-            request_id = uuid.uuid4().hex[:10]
+        async def get_proposal(draft_id: str, request: Request):
             try:
                 draft = await self.dao.get_draft(draft_id)
                 if not draft:
                     raise HTTPException(status_code=404, detail="Draft not found")
-                logger.info(json.dumps({"request_id": request_id, "event": "get_proposal", "draft_id": draft_id}))
+                log_info(request, "get_proposal", draft_id=draft_id)
                 resp = JSONResponse({"success": True, "draft": json.loads(draft.json())})
-                resp.headers["X-Request-ID"] = request_id
                 return resp
             except HTTPException:
                 raise
@@ -928,8 +932,7 @@ class VertexGrantAgentService:
                 raise HTTPException(status_code=500, detail="Failed to fetch draft")
 
         @self.app.post("/proposals/{draft_id}/comments")
-        async def add_comments(draft_id: str, req: Dict[str, Any]):
-            request_id = uuid.uuid4().hex[:10]
+        async def add_comments(draft_id: str, req: Dict[str, Any], request: Request):
             try:
                 draft = await self.dao.get_draft(draft_id)
                 if not draft:
@@ -961,9 +964,8 @@ class VertexGrantAgentService:
                         createdAt=now,
                     ))
                 saved = await self.dao.add_comments(draft_id, prepared)
-                logger.info(json.dumps({"request_id": request_id, "event": "add_comments", "draft_id": draft_id, "count": len(saved)}))
+                log_info(request, "add_comments", draft_id=draft_id, count=len(saved))
                 resp = JSONResponse({"success": True, "added": [s.dict() for s in saved]})
-                resp.headers["X-Request-ID"] = request_id
                 return resp
             except HTTPException:
                 raise
@@ -972,17 +974,15 @@ class VertexGrantAgentService:
                 raise HTTPException(status_code=500, detail="Failed to add comments")
 
         @self.app.get("/proposals/{draft_id}/comments")
-        async def list_comments(draft_id: str):
-            request_id = uuid.uuid4().hex[:10]
+        async def list_comments(draft_id: str, request: Request):
             try:
                 draft = await self.dao.get_draft(draft_id)
                 if not draft:
                     raise HTTPException(status_code=404, detail="Draft not found")
                 comments = await self.dao.list_comments(draft_id)
                 unresolved = [c for c in comments if not c.resolved]
-                logger.info(json.dumps({"request_id": request_id, "event": "list_comments", "draft_id": draft_id, "count": len(unresolved)}))
+                log_info(request, "list_comments", draft_id=draft_id, count=len(unresolved))
                 resp = JSONResponse({"comments": [c.dict() for c in unresolved]})
-                resp.headers["X-Request-ID"] = request_id
                 return resp
             except HTTPException:
                 raise
@@ -991,8 +991,7 @@ class VertexGrantAgentService:
                 raise HTTPException(status_code=500, detail="Failed to list comments")
 
         @self.app.post("/proposals/{draft_id}/refine")
-        async def refine(draft_id: str, req: Dict[str, Any]):
-            request_id = uuid.uuid4().hex[:10]
+        async def refine(draft_id: str, req: Dict[str, Any], request: Request):
             try:
                 changed_ids = req.get('changedSectionIds') or []
                 comment_ids = req.get('commentIds')
@@ -1003,10 +1002,9 @@ class VertexGrantAgentService:
                     comment_ids=comment_ids,
                     generator=self.orchestrator.fast_model,
                 )
-                logger.info(json.dumps({"request_id": request_id, "event": "refine", "draft_id": draft_id, "updated": [s.id for s in updated_sections]}))
+                log_info(request, "refine", draft_id=draft_id, updated=[s.id for s in updated_sections])
                 updated_map = {s.id: s.content for s in updated_sections}
                 resp = JSONResponse({"success": True, "updatedSections": updated_map, "refinementId": refinement_record.id})
-                resp.headers["X-Request-ID"] = request_id
                 return resp
             except HTTPException:
                 raise
@@ -1015,8 +1013,7 @@ class VertexGrantAgentService:
                 raise HTTPException(status_code=500, detail="Failed to refine sections")
 
         @self.app.post("/import/document")
-        async def import_document(file: UploadFile = File(...)):
-            request_id = uuid.uuid4().hex[:10]
+        async def import_document(file: UploadFile = File(...), request: Request):
             try:
                 content_bytes = await file.read()
                 text = await extract_text(content_bytes, filename=file.filename or "uploaded")
@@ -1038,21 +1035,20 @@ class VertexGrantAgentService:
                 except Exception:
                     insight_questions = []
                 proposed_sections = _canonical_sections({"project": fields.get("project", {}), "org": fields.get("org", {}), "funder": fields.get("funder", {})})
-                logger.info(json.dumps({"request_id": request_id, "event": "import_document", "filename": file.filename, "text_length": len(text)}))
+                log_info(request, "import_document", filename=file.filename, text_length=len(text))
                 resp = JSONResponse({
                     "success": True,
                     "extracted": fields,
                     "suggestedSections": [s.dict() for s in proposed_sections],
                     "insightQuestions": insight_questions
                 })
-                resp.headers["X-Request-ID"] = request_id
                 return resp
             except Exception as e:
                 logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
                 raise HTTPException(status_code=500, detail="Failed to import document")
         
         @self.app.post("/upload_documents")
-        async def upload_documents(files: List[UploadFile] = File(...)):
+        async def upload_documents(files: List[UploadFile] = File(...), request: Request):
             """Upload documents for grant processing"""
             try:
                 # Use AsyncArtifactService if available, otherwise fallback to direct GCS upload
@@ -1078,7 +1074,6 @@ class VertexGrantAgentService:
                         "artifact_ids": artifact_ids,
                         "message": f"Uploaded {len(files)} documents successfully"
                     })
-                    resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
                     return resp
                 else:
                     # Fallback: Direct GCS upload without Redis dependency
@@ -1141,7 +1136,6 @@ class VertexGrantAgentService:
                         "message": f"Uploaded {len(files)} documents to cloud storage",
                         "storage_type": "gcs_direct"
                     })
-                    resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
                     return resp
                 
             except Exception as e:
@@ -1149,7 +1143,7 @@ class VertexGrantAgentService:
                 raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
         
         @self.app.get("/documents/{artifact_id}")
-        async def get_document(artifact_id: str):
+        async def get_document(artifact_id: str, request: Request):
             """Retrieve document metadata and content by artifact ID"""
             try:
                 if self.artifact_service:
@@ -1188,7 +1182,6 @@ class VertexGrantAgentService:
                                 },
                                 "storage_type": "gcs_direct"
                             })
-                            resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
                             return resp
                     except Exception as e:
                         logger.error(f"Error retrieving document from GCS: {e}")
@@ -1200,7 +1193,7 @@ class VertexGrantAgentService:
                 raise HTTPException(status_code=500, detail=str(e))
         
         @self.app.post("/generate_grant_proposal")
-        async def generate_grant_proposal(request: Dict[str, Any]):
+        async def generate_grant_proposal(request: Dict[str, Any], req: Request = None):
             """Generate grant proposal using MAS"""
             try:
                 # Extract request parameters
@@ -1252,7 +1245,6 @@ class VertexGrantAgentService:
                     "task_id": task_id,
                     "timestamp": datetime.now().isoformat()
                 })
-                resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
                 return resp
                 
             except Exception as e:
@@ -1320,7 +1312,6 @@ class VertexGrantAgentService:
                     "proposal": proposal,
                     "timestamp": datetime.now().isoformat()
                 })
-                resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
                 return resp
                 
             except Exception as e:
@@ -1388,7 +1379,6 @@ class VertexGrantAgentService:
                     "grade": None,
                     "mode": "full_comprehensive_mas"
                 })
-                resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
                 return resp
                 
             except Exception as e:
