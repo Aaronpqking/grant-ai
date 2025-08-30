@@ -1,0 +1,14 @@
+2025-08-25 20:28:23,199 - INFO - 🚀 Starting Vertex AI Grant Agent Test Suite
+2025-08-25 20:28:23,199 - INFO - 📍 Target URL: https://vertex-grant-agent-vqjdj6kdpq-uc.a.run.app
+2025-08-25 20:28:23,199 - INFO - 🧪 Starting Comprehensive Test Suite
+2025-08-25 20:28:23,202 - INFO - 🏥 Testing Health Check...
+2025-08-25 20:28:45,347 - INFO - ✅ Health Check: PASS (22.14s)
+2025-08-25 20:28:45,369 - INFO - 📋 Testing Full Proposal: basic_full
+2025-08-25 20:30:31,137 - INFO - ✅ Full Proposal 'basic_full': FAIL (105.76s)
+2025-08-25 20:30:31,140 - INFO - ⚡ Performance Test: 3 concurrent requests to /quick_proposal
+2025-08-25 20:32:07,737 - INFO - ⚡ Performance Test: 3/3 successful (91.01s avg)
+2025-08-25 20:32:07,743 - INFO - 📊 TEST SUMMARY
+2025-08-25 20:32:07,743 - INFO - ✅ Passed: 2/3 (66.7%)
+2025-08-25 20:32:07,743 - INFO - ⏱️  Average Response Time: 63.95s
+2025-08-25 20:32:07,743 - INFO - 🏥 Health Status: PASS
+2025-08-25 20:32:07,743 - INFO - 📄 Full results saved to: test_results_20250825_203207.json

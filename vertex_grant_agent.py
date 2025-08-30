@@ -7,8 +7,11 @@ import asyncio
 import json
 import logging
 import os
+import re
+import uuid
+from io import BytesIO
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass
 from enum import Enum
 
@@ -18,9 +21,12 @@ from vertexai.generative_models import GenerativeModel
 
 
 # FastAPI for async web service
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from starlette.middleware.base import BaseHTTPMiddleware
+import time
 
 # Local imports
 from async_artifact_service import AsyncArtifactService, ArtifactProcessor
@@ -32,6 +38,390 @@ load_dotenv('config.env')
 # Configure logging
 logging.basicConfig(level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO')))
 logger = logging.getLogger(__name__)
+
+# Firestore availability flag
+FIRESTORE_AVAILABLE = bool(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
+
+
+# ---------------------------
+# Pydantic Models (lean V1)
+# ---------------------------
+
+class Section(BaseModel):
+    id: str
+    key: str
+    title: str
+    content: str = ""
+    updatedAt: Optional[str] = None
+
+
+class Anchor(BaseModel):
+    startOffset: int = 0
+    endOffset: int = 0
+
+
+class Comment(BaseModel):
+    id: str
+    draftId: str
+    sectionId: str
+    anchor: Anchor
+    text: str
+    author: Optional[str] = None
+    resolved: bool = False
+    createdAt: str
+
+
+class Refinement(BaseModel):
+    id: str
+    draftId: str
+    commentIds: List[str] = []
+    changedSectionIds: List[str] = []
+    before: Dict[str, str] = Field(default_factory=dict)
+    after: Dict[str, str] = Field(default_factory=dict)
+    createdAt: str
+
+
+class Draft(BaseModel):
+    id: str
+    title: Optional[str] = None
+    createdAt: str
+    updatedAt: str
+    initialInput: Dict[str, Any] = Field(default_factory=dict)
+    sections: List[Section] = Field(default_factory=list)
+
+
+class CreateDraftRequest(BaseModel):
+    title: Optional[str] = None
+    initialInput: Optional[Dict[str, Any]] = None
+
+
+class AddCommentsRequest(BaseModel):
+    comments: Optional[List[Comment]] = None
+
+
+class RefineRequest(BaseModel):
+    changedSectionIds: List[str]
+    commentIds: Optional[List[str]] = None
+
+
+def _new_id(prefix: str) -> str:
+    return f"{prefix}_{uuid.uuid4().hex[:8]}"
+
+
+def _now_iso() -> str:
+    return datetime.utcnow().isoformat()
+
+
+# ---------------------------
+# DAO Layer (Firestore or In-Memory)
+# ---------------------------
+
+class DraftDAO:
+    async def create_draft(self, draft: Draft) -> Draft:
+        raise NotImplementedError
+
+    async def get_draft(self, draft_id: str) -> Optional[Draft]:
+        raise NotImplementedError
+
+    async def save_sections(self, draft_id: str, sections: List[Section]) -> None:
+        raise NotImplementedError
+
+    async def add_comments(self, draft_id: str, comments: List[Comment]) -> List[Comment]:
+        raise NotImplementedError
+
+    async def list_comments(self, draft_id: str) -> List[Comment]:
+        raise NotImplementedError
+
+    async def create_refinement(self, refinement: Refinement) -> Refinement:
+        raise NotImplementedError
+
+
+class InMemoryDAO(DraftDAO):
+    def __init__(self):
+        self._drafts: Dict[str, Draft] = {}
+        self._comments: Dict[str, List[Comment]] = {}
+        self._refinements: Dict[str, List[Refinement]] = {}
+
+    async def create_draft(self, draft: Draft) -> Draft:
+        self._drafts[draft.id] = draft
+        self._comments[draft.id] = []
+        self._refinements[draft.id] = []
+        return draft
+
+    async def get_draft(self, draft_id: str) -> Optional[Draft]:
+        return self._drafts.get(draft_id)
+
+    async def save_sections(self, draft_id: str, sections: List[Section]) -> None:
+        draft = self._drafts.get(draft_id)
+        if draft:
+            draft.sections = sections
+            draft.updatedAt = _now_iso()
+
+    async def add_comments(self, draft_id: str, comments: List[Comment]) -> List[Comment]:
+        if draft_id not in self._comments:
+            self._comments[draft_id] = []
+        self._comments[draft_id].extend(comments)
+        return comments
+
+    async def list_comments(self, draft_id: str) -> List[Comment]:
+        return self._comments.get(draft_id, [])
+
+    async def create_refinement(self, refinement: Refinement) -> Refinement:
+        if refinement.draftId not in self._refinements:
+            self._refinements[refinement.draftId] = []
+        self._refinements[refinement.draftId].append(refinement)
+        return refinement
+
+
+class FirestoreDAO(DraftDAO):
+    def __init__(self):
+        from google.cloud import firestore  # type: ignore
+        self._db = firestore.Client()
+
+    def _draft_doc(self, draft_id: str):
+        return self._db.collection('drafts').document(draft_id)
+
+    async def create_draft(self, draft: Draft) -> Draft:
+        self._draft_doc(draft.id).set(json.loads(draft.json()))
+        return draft
+
+    async def get_draft(self, draft_id: str) -> Optional[Draft]:
+        snap = self._draft_doc(draft_id).get()
+        if not snap.exists:
+            return None
+        data = snap.to_dict() or {}
+        try:
+            data['sections'] = [Section(**s) if isinstance(s, dict) else s for s in data.get('sections', [])]
+            return Draft(**data)
+        except Exception:
+            return None
+
+    async def save_sections(self, draft_id: str, sections: List[Section]) -> None:
+        self._draft_doc(draft_id).update({
+            'sections': [json.loads(s.json()) for s in sections],
+            'updatedAt': _now_iso(),
+        })
+
+    async def add_comments(self, draft_id: str, comments: List[Comment]) -> List[Comment]:
+        col = self._draft_doc(draft_id).collection('comments')
+        batch = self._db.batch()
+        for c in comments:
+            batch.set(col.document(c.id), json.loads(c.json()))
+        batch.commit()
+        return comments
+
+    async def list_comments(self, draft_id: str) -> List[Comment]:
+        col = self._draft_doc(draft_id).collection('comments')
+        docs = list(col.stream())
+        out: List[Comment] = []
+        for d in docs:
+            data = d.to_dict() or {}
+            try:
+                if isinstance(data.get('anchor'), dict):
+                    data['anchor'] = Anchor(**data['anchor'])
+                out.append(Comment(**data))
+            except Exception:
+                continue
+        return out
+
+    async def create_refinement(self, refinement: Refinement) -> Refinement:
+        col = self._draft_doc(refinement.draftId).collection('refinements')
+        col.document(refinement.id).set(json.loads(refinement.json()))
+        return refinement
+
+
+# ---------------------------
+# Content helpers
+# ---------------------------
+
+def _canonical_sections(initial: Dict[str, Any]) -> List[Section]:
+    keys = [
+        ("exec_summary", "Executive Summary"),
+        ("need", "Statement of Need"),
+        ("description", "Project Description"),
+        ("goals", "Goals & Objectives"),
+        ("methodology", "Methodology"),
+        ("timeline", "Timeline"),
+        ("budget", "Budget"),
+        ("evaluation", "Evaluation Plan"),
+        ("sustainability", "Sustainability"),
+        ("outcomes", "Expected Outcomes"),
+    ]
+    content_hints = []
+    if initial:
+        org = initial.get('org') or initial.get('organization') or {}
+        funder = initial.get('funder') or {}
+        project = initial.get('project') or {}
+        hint = f"Organization: {org.get('name','')}. Funder: {funder.get('name','')}. Project: {project.get('title','')}."
+        content_hints.append(hint)
+    now = _now_iso()
+    return [Section(id=_new_id('sec'), key=k, title=title, content="\n\n".join(content_hints).strip(), updatedAt=now) for k, title in keys]
+
+
+async def _safe_model_json_call(generator: Any, prompt: str, schema_note: str) -> Dict[str, Any]:
+    """Ask model for JSON and robustly parse it."""
+    try:
+        def _call():
+            return generator.generate_content(prompt)
+        resp = await asyncio.get_event_loop().run_in_executor(None, _call)
+        text = getattr(resp, 'text', '') or ''
+    except Exception as e:
+        logger.warning("model call failed: %s", e)
+        text = ''
+
+    # Try direct json
+    for candidate in [text]:
+        try:
+            return json.loads(candidate)
+        except Exception:
+            pass
+
+    # Extract JSON block
+    m = re.search(r"\{[\s\S]*\}", text)
+    if m:
+        try:
+            return json.loads(m.group(0))
+        except Exception:
+            # naïve repairs
+            repaired = m.group(0)
+            repaired = re.sub(r",\s*([}\]])", r"\1", repaired)
+            try:
+                return json.loads(repaired)
+            except Exception:
+                pass
+
+    # Retry once with a stricter instruction
+    try:
+        def _retry():
+            return generator.generate_content(prompt + "\nReturn ONLY valid JSON, no commentary.")
+        resp2 = await asyncio.get_event_loop().run_in_executor(None, _retry)
+        text2 = getattr(resp2, 'text', '') or ''
+        return json.loads(text2)
+    except Exception:
+        pass
+
+    logger.info("invalid JSON from model after retry, returning empty schema: %s", schema_note)
+    return {}
+
+
+async def extract_text(content: bytes, filename: str) -> str:
+    name = (filename or '').lower()
+    try:
+        if name.endswith('.docx'):
+            try:
+                from docx import Document  # type: ignore
+                doc = Document(BytesIO(content))
+                return "\n".join([p.text for p in doc.paragraphs])
+            except Exception:
+                pass
+        if name.endswith('.pdf'):
+            try:
+                from pdfminer.high_level import extract_text as pdf_extract  # type: ignore
+                return pdf_extract(BytesIO(content))
+            except Exception:
+                pass
+        if name.endswith('.csv'):
+            try:
+                import csv
+                text_lines: List[str] = []
+                for row in csv.reader(BytesIO(content).read().decode(errors='ignore').splitlines()):
+                    text_lines.append(", ".join(row))
+                return "\n".join(text_lines)
+            except Exception:
+                pass
+        # default .txt/.md or unknown
+        return content.decode(errors='ignore')
+    except Exception:
+        return content.decode(errors='ignore')
+
+
+async def extract_fields(text: str, generator: Any) -> Dict[str, Any]:
+    """Map raw text to structured fields; model optional."""
+    prompt = (
+        "You are an information extraction system. Extract grant proposal fields as strict JSON with keys: "
+        "org, funder, project, objectives, budget, timeline, impact. Use strings or arrays of strings."
+        f"\nText:\n{text[:6000]}\nReturn only JSON."
+    )
+    if generator:
+        data = await _safe_model_json_call(generator, prompt, schema_note='extract_fields')
+        if data:
+            return data
+    # fallback heuristics
+    budget_match = re.search(r"\$?[0-9][0-9,\.]+", text)
+    return {
+        "org": {},
+        "funder": {},
+        "project": {"title": None, "summary": text[:400] + ("..." if len(text) > 400 else "")},
+        "objectives": [],
+        "budget": {"amount": budget_match.group(0) if budget_match else None},
+        "timeline": {},
+        "impact": None,
+    }
+
+
+async def refine_sections_helper(dao: Any, draft_id: str, changed_section_ids: List[str], comment_ids: Optional[List[str]], generator: Any):
+    draft = await dao.get_draft(draft_id)
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    comments = await dao.list_comments(draft_id)
+    if comment_ids:
+        comments = [c for c in comments if c.id in comment_ids]
+    unresolved = [c for c in comments if not c.resolved and c.sectionId in changed_section_ids]
+
+    id_to_section = {s.id: s for s in draft.sections}
+    updated: List[Section] = []
+    before: Dict[str, str] = {}
+    after: Dict[str, str] = {}
+
+    for sid in changed_section_ids:
+        section = id_to_section.get(sid)
+        if not section:
+            continue
+        section_comments = [c for c in unresolved if c.sectionId == sid]
+        instructions = "\n".join([f"- {c.text} (range {c.anchor.startOffset}-{c.anchor.endOffset})" for c in section_comments])
+        prompt = (
+            "Refine the following proposal section. Apply only the requested changes. "
+            "Keep structure and tone consistent. Return only the updated section text.\n"
+            f"Initial Context (org/funder/project): {json.dumps(draft.initialInput)[:1500]}\n"
+            f"Section Title: {section.title}\n"
+            f"Current Content:\n{section.content}\n"
+            f"Instructions:\n{instructions or 'Minor improvements for clarity.'}"
+        )
+        new_text = section.content
+        try:
+            def _call():
+                return generator.generate_content(prompt)
+            resp = await asyncio.get_event_loop().run_in_executor(None, _call)
+            cand = getattr(resp, 'text', '') or ''
+            if cand.strip():
+                new_text = cand.strip()
+        except Exception as e:
+            logger.warning("refine call failed: %s", e)
+        before[sid] = section.content
+        section.content = new_text
+        section.updatedAt = _now_iso()
+        after[sid] = new_text
+        updated.append(section)
+
+    if updated:
+        # persist
+        await dao.save_sections(draft_id, list(id_to_section.values()))
+        refinement = Refinement(
+            id=_new_id('ref'),
+            draftId=draft_id,
+            commentIds=[c.id for c in unresolved],
+            changedSectionIds=[s.id for s in updated],
+            before=before,
+            after=after,
+            createdAt=_now_iso(),
+        )
+        await dao.create_refinement(refinement)
+    else:
+        refinement = Refinement(
+            id=_new_id('ref'), draftId=draft_id, commentIds=[], changedSectionIds=[], before={}, after={}, createdAt=_now_iso()
+        )
+
+    return updated, refinement
 
 
 class AgentRole(Enum):
@@ -122,13 +512,14 @@ class OrchestratorAgent(BaseAgent):
         organization_info: Dict[str, Any],
         funder_info: Dict[str, Any],
         document_artifacts: List[str],
-        requirements: Dict[str, Any]
+        requirements: Dict[str, Any],
+        task_id: Optional[str] = None,
     ) -> str:
         """Process a grant request by coordinating sub-agents"""
         
         try:
-            # Generate task ID
-            task_id = f"grant_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            # Generate or use provided task ID
+            task_id = task_id or f"grant_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             
             # Detect grant type
             grant_type = await self._detect_grant_type(funder_info)
@@ -185,22 +576,39 @@ class OrchestratorAgent(BaseAgent):
         """Coordinate the grant processing across multiple agents"""
         
         try:
+            t0 = datetime.now()
             # Phase 1: Research and Analysis
             research_result = await self._delegate_research(task_context)
+            t1 = datetime.now()
             
             # Phase 2: Content Generation
             writing_result = await self._delegate_writing(task_context, research_result)
+            t2 = datetime.now()
             
             # Phase 3: Review and Quality Assurance
             review_result = await self._delegate_review(task_context, writing_result)
+            t3 = datetime.now()
             
             # Phase 4: Compliance Check
             compliance_result = await self._delegate_compliance(task_context, review_result)
+            t4 = datetime.now()
             
             # Generate final output
             final_result = await self._generate_final_output(
                 task_context, research_result, writing_result, review_result, compliance_result
             )
+            t5 = datetime.now()
+            
+            logger.info(json.dumps({
+                "latency_ms": {
+                    "research": (t1 - t0).total_seconds() * 1000,
+                    "writing": (t2 - t1).total_seconds() * 1000,
+                    "review": (t3 - t2).total_seconds() * 1000,
+                    "compliance": (t4 - t3).total_seconds() * 1000,
+                    "finalize": (t5 - t4).total_seconds() * 1000,
+                    "total": (t5 - t0).total_seconds() * 1000
+                }
+            }))
             
             return final_result
             
@@ -234,9 +642,21 @@ class OrchestratorAgent(BaseAgent):
     async def _delegate_writing(self, task_context: TaskContext, research_result: Dict[str, Any]) -> Dict[str, Any]:
         """Delegate writing task to writing agent"""
         
-        writing_prompt = f"""
-        Generate a comprehensive {task_context.grant_type.value} grant proposal based on the following:
+        # Funder-language alignment step: derive tone/lexicon from funder information and align organization content
+        funder_lang_prompt = f"""
+        Analyze the funder's language and phrasing preferences from this info and return a concise style guide:
+        {json.dumps(task_context.funder_info, indent=2)}
         
+        Return as JSON with keys: tone (string), preferred_terms (string[]), avoid_terms (string[]), reading_level (string), style_notes (string[]).
+        """
+        funder_lang = await self.generate_text(funder_lang_prompt, use_fast_model=True)
+
+        writing_prompt = f"""
+        Generate a comprehensive {task_context.grant_type.value} grant proposal. Strictly align language with this style guide:
+        {funder_lang}
+
+        Use organization and funder context below. Ensure sections: Executive Summary, Statement of Need, Project Description, Goals & Objectives, Methodology, Timeline, Budget, Evaluation Plan, Sustainability, Expected Outcomes.
+
         Research Findings:
         {research_result.get('research_findings', '')}
         
@@ -245,8 +665,6 @@ class OrchestratorAgent(BaseAgent):
         
         Funder Information:
         {json.dumps(task_context.funder_info, indent=2)}
-        
-        Generate a complete proposal with all required sections for {task_context.grant_type.value} grants.
         """
         
         proposal_content = await self.generate_text(writing_prompt)
@@ -336,6 +754,13 @@ class VertexGrantAgentService:
         self.artifact_service = None
         self.artifact_processor = None
         self.orchestrator = None
+        # DAO (Firestore if credentials present; else in-memory)
+        try:
+            self.dao = FirestoreDAO() if FIRESTORE_AVAILABLE else InMemoryDAO()
+            logger.info("DAO initialized: %s", 'Firestore' if FIRESTORE_AVAILABLE else 'InMemory')
+        except Exception as e:
+            logger.warning("DAO init failed, falling back to InMemory: %s", e)
+            self.dao = InMemoryDAO()
         
         # FastAPI app
         self.app = FastAPI(
@@ -399,13 +824,34 @@ class VertexGrantAgentService:
     
     def _setup_middleware(self):
         """Setup FastAPI middleware"""
+        allow_origins = os.getenv('CORS_ALLOW_ORIGINS', '*')
+        origins = [o.strip() for o in allow_origins.split(',')] if allow_origins else ['*']
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=origins,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
+        
+        class RequestIDMiddleware(BaseHTTPMiddleware):
+            async def dispatch(self, request: Request, call_next):
+                rid = request.headers.get('X-Request-ID') or uuid.uuid4().hex[:10]
+                t0 = time.time()
+                response = await call_next(request)
+                response.headers['X-Request-ID'] = rid
+                t1 = time.time()
+                try:
+                    logger.info(json.dumps({
+                        "request_id": rid,
+                        "path": str(request.url.path),
+                        "latency_ms": round((t1 - t0) * 1000, 2)
+                    }))
+                except Exception:
+                    pass
+                return response
+        
+        self.app.add_middleware(RequestIDMiddleware)
     
     def _setup_routes(self):
         """Setup FastAPI routes"""
@@ -437,6 +883,174 @@ class VertexGrantAgentService:
                 }
             })
         
+        
+        @self.app.post("/proposals")
+        async def create_proposal(req: Dict[str, Any]):
+            request_id = uuid.uuid4().hex[:10]
+            try:
+                # Validate/Create initial input
+                initial = req.get('initialInput') or {}
+                title = req.get('title') or initial.get('project', {}).get('title') or 'Draft Proposal'
+                draft_id = _new_id('draft')
+                sections = _canonical_sections(initial)
+                draft = Draft(
+                    id=draft_id,
+                    title=title,
+                    createdAt=_now_iso(),
+                    updatedAt=_now_iso(),
+                    initialInput=initial,
+                    sections=sections,
+                )
+                await self.dao.create_draft(draft)
+                logger.info(json.dumps({"request_id": request_id, "event": "create_proposal", "draft_id": draft_id}))
+                resp = JSONResponse({"success": True, "draft": json.loads(draft.json())})
+                resp.headers["X-Request-ID"] = request_id
+                return resp
+            except Exception as e:
+                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                raise HTTPException(status_code=500, detail="Failed to create proposal")
+
+        @self.app.get("/proposals/{draft_id}")
+        async def get_proposal(draft_id: str):
+            request_id = uuid.uuid4().hex[:10]
+            try:
+                draft = await self.dao.get_draft(draft_id)
+                if not draft:
+                    raise HTTPException(status_code=404, detail="Draft not found")
+                logger.info(json.dumps({"request_id": request_id, "event": "get_proposal", "draft_id": draft_id}))
+                resp = JSONResponse({"success": True, "draft": json.loads(draft.json())})
+                resp.headers["X-Request-ID"] = request_id
+                return resp
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                raise HTTPException(status_code=500, detail="Failed to fetch draft")
+
+        @self.app.post("/proposals/{draft_id}/comments")
+        async def add_comments(draft_id: str, req: Dict[str, Any]):
+            request_id = uuid.uuid4().hex[:10]
+            try:
+                draft = await self.dao.get_draft(draft_id)
+                if not draft:
+                    raise HTTPException(status_code=404, detail="Draft not found")
+
+                body = req or {}
+                comments_input: List[Dict[str, Any]]
+                if isinstance(body.get('comments'), list):
+                    comments_input = body['comments']
+                else:
+                    comments_input = [body]
+
+                prepared: List[Comment] = []
+                now = _now_iso()
+                for c in comments_input:
+                    cid = c.get('id') or _new_id('c')
+                    anchor_obj = c.get('anchor') or {
+                        "startOffset": c.get('startOffset', 0),
+                        "endOffset": c.get('endOffset', 0)
+                    }
+                    prepared.append(Comment(
+                        id=cid,
+                        draftId=draft_id,
+                        sectionId=c.get('sectionId'),
+                        anchor=Anchor(**anchor_obj),
+                        text=c.get('text', ''),
+                        author=c.get('author'),
+                        resolved=bool(c.get('resolved', False)),
+                        createdAt=now,
+                    ))
+                saved = await self.dao.add_comments(draft_id, prepared)
+                logger.info(json.dumps({"request_id": request_id, "event": "add_comments", "draft_id": draft_id, "count": len(saved)}))
+                resp = JSONResponse({"success": True, "added": [s.dict() for s in saved]})
+                resp.headers["X-Request-ID"] = request_id
+                return resp
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                raise HTTPException(status_code=500, detail="Failed to add comments")
+
+        @self.app.get("/proposals/{draft_id}/comments")
+        async def list_comments(draft_id: str):
+            request_id = uuid.uuid4().hex[:10]
+            try:
+                draft = await self.dao.get_draft(draft_id)
+                if not draft:
+                    raise HTTPException(status_code=404, detail="Draft not found")
+                comments = await self.dao.list_comments(draft_id)
+                unresolved = [c for c in comments if not c.resolved]
+                logger.info(json.dumps({"request_id": request_id, "event": "list_comments", "draft_id": draft_id, "count": len(unresolved)}))
+                resp = JSONResponse({"comments": [c.dict() for c in unresolved]})
+                resp.headers["X-Request-ID"] = request_id
+                return resp
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                raise HTTPException(status_code=500, detail="Failed to list comments")
+
+        @self.app.post("/proposals/{draft_id}/refine")
+        async def refine(draft_id: str, req: Dict[str, Any]):
+            request_id = uuid.uuid4().hex[:10]
+            try:
+                changed_ids = req.get('changedSectionIds') or []
+                comment_ids = req.get('commentIds')
+                updated_sections, refinement_record = await refine_sections_helper(
+                    dao=self.dao,
+                    draft_id=draft_id,
+                    changed_section_ids=changed_ids,
+                    comment_ids=comment_ids,
+                    generator=self.orchestrator.fast_model,
+                )
+                logger.info(json.dumps({"request_id": request_id, "event": "refine", "draft_id": draft_id, "updated": [s.id for s in updated_sections]}))
+                updated_map = {s.id: s.content for s in updated_sections}
+                resp = JSONResponse({"success": True, "updatedSections": updated_map, "refinementId": refinement_record.id})
+                resp.headers["X-Request-ID"] = request_id
+                return resp
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                raise HTTPException(status_code=500, detail="Failed to refine sections")
+
+        @self.app.post("/import/document")
+        async def import_document(file: UploadFile = File(...)):
+            request_id = uuid.uuid4().hex[:10]
+            try:
+                content_bytes = await file.read()
+                text = await extract_text(content_bytes, filename=file.filename or "uploaded")
+                fields = await extract_fields(text, generator=self.orchestrator.fast_model)
+                # Optional insight prompt (3–7 questions) to guide user before prefill
+                insight_questions: List[str] = []
+                try:
+                    if self.orchestrator and self.orchestrator.fast_model:
+                        q_prompt = (
+                            "Given the extracted fields for a grant draft, generate 3 to 7 short, specific questions "
+                            "to clarify gaps. Return JSON array of strings only.\n"
+                            f"Fields: {json.dumps(fields)[:1200]}"
+                        )
+                        data = await _safe_model_json_call(self.orchestrator.fast_model, q_prompt, schema_note='insight_questions')
+                        if isinstance(data, list):
+                            insight_questions = [str(x) for x in data][:7]
+                        elif isinstance(data, dict) and isinstance(data.get('questions'), list):
+                            insight_questions = [str(x) for x in data['questions']][:7]
+                except Exception:
+                    insight_questions = []
+                proposed_sections = _canonical_sections({"project": fields.get("project", {}), "org": fields.get("org", {}), "funder": fields.get("funder", {})})
+                logger.info(json.dumps({"request_id": request_id, "event": "import_document", "filename": file.filename, "text_length": len(text)}))
+                resp = JSONResponse({
+                    "success": True,
+                    "extracted": fields,
+                    "suggestedSections": [s.dict() for s in proposed_sections],
+                    "insightQuestions": insight_questions
+                })
+                resp.headers["X-Request-ID"] = request_id
+                return resp
+            except Exception as e:
+                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                raise HTTPException(status_code=500, detail="Failed to import document")
+        
         @self.app.post("/upload_documents")
         async def upload_documents(files: List[UploadFile] = File(...)):
             """Upload documents for grant processing"""
@@ -459,11 +1073,13 @@ class VertexGrantAgentService:
                         
                         artifact_ids.append(metadata.artifact_id)
                     
-                    return JSONResponse({
+                    resp = JSONResponse({
                         "success": True,
                         "artifact_ids": artifact_ids,
                         "message": f"Uploaded {len(files)} documents successfully"
                     })
+                    resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
+                    return resp
                 else:
                     # Fallback: Direct GCS upload without Redis dependency
                     logger.info("Using direct GCS upload fallback")
@@ -513,19 +1129,20 @@ class VertexGrantAgentService:
                             "size_bytes": len(content),
                             "content_hash": content_hash,
                             "gcs_url": f"gs://{bucket_name}/{blob_name}",
-                            "public_url": blob.public_url,
                             "upload_timestamp": datetime.now().isoformat()
                         }
                         
                         uploaded_documents.append(doc_metadata)
                         logger.info(f"Uploaded {file.filename} to GCS: {blob_name}")
                     
-                    return JSONResponse({
+                    resp = JSONResponse({
                         "success": True,
                         "documents": uploaded_documents,
                         "message": f"Uploaded {len(files)} documents to cloud storage",
                         "storage_type": "gcs_direct"
                     })
+                    resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
+                    return resp
                 
             except Exception as e:
                 logger.error(f"Error uploading documents: {e}")
@@ -539,9 +1156,11 @@ class VertexGrantAgentService:
                     # Use AsyncArtifactService if available
                     metadata = await self.artifact_service.get_artifact_metadata(artifact_id)
                     if metadata:
+                        md = metadata.dict()
+                        md.pop('public_url', None)
                         return JSONResponse({
                             "success": True,
-                            "metadata": metadata.dict(),
+                            "metadata": md,
                             "storage_type": "async_service"
                         })
                 else:
@@ -557,7 +1176,7 @@ class VertexGrantAgentService:
                         
                         if blobs:
                             blob = blobs[0]  # Get first matching document
-                            return JSONResponse({
+                            resp = JSONResponse({
                                 "success": True,
                                 "metadata": {
                                     "artifact_id": artifact_id,
@@ -565,11 +1184,12 @@ class VertexGrantAgentService:
                                     "content_type": blob.content_type,
                                     "size_bytes": blob.size,
                                     "gcs_url": f"gs://{bucket_name}/{blob.name}",
-                                    "public_url": blob.public_url,
                                     "created": blob.time_created.isoformat() if blob.time_created else None
                                 },
                                 "storage_type": "gcs_direct"
                             })
+                            resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
+                            return resp
                     except Exception as e:
                         logger.error(f"Error retrieving document from GCS: {e}")
                 
@@ -590,18 +1210,50 @@ class VertexGrantAgentService:
                 requirements = request.get('requirements', {})
                 
                 # Process through orchestrator
+                task_id = f"grant_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
                 result = await self.orchestrator.process_grant_request(
                     organization_info=organization_info,
                     funder_info=funder_info,
                     document_artifacts=document_artifacts,
-                    requirements=requirements
+                    requirements=requirements,
+                    task_id=task_id
                 )
                 
-                return JSONResponse({
+                # Persist proposal metadata to Firestore if available
+                try:
+                    from google.cloud import firestore
+                    db = firestore.Client()
+                    doc_ref = db.collection('proposals').document(task_id)
+                    # attempt to include GCS export reference if available from artifact service
+                    export_ref = None
+                    try:
+                        if hasattr(self.artifact_service, 'last_export_gcs_path'):
+                            export_ref = getattr(self.artifact_service, 'last_export_gcs_path')
+                    except Exception:
+                        export_ref = None
+
+                    doc_ref.set({
+                        'task_id': task_id,
+                        'organization': organization_info,
+                        'funder': funder_info,
+                        'documents': document_artifacts,
+                        'requirements': requirements,
+                        'proposal': result,
+                        'export_gcs_path': export_ref,
+                        'timestamp': datetime.now().isoformat()
+                    })
+                    logger.info('Saved proposal to Firestore: proposals/%s', task_id)
+                except Exception as e:
+                    logger.warning('Failed to save proposal to Firestore: %s', e)
+
+                resp = JSONResponse({
                     "success": True,
                     "proposal": result,
+                    "task_id": task_id,
                     "timestamp": datetime.now().isoformat()
                 })
+                resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
+                return resp
                 
             except Exception as e:
                 logger.error(f"Error generating proposal: {e}")
@@ -663,11 +1315,13 @@ class VertexGrantAgentService:
                 
                 logger.info(f"✅ Quick proposal generated successfully")
                 
-                return JSONResponse({
+                resp = JSONResponse({
                     "success": True,
                     "proposal": proposal,
                     "timestamp": datetime.now().isoformat()
                 })
+                resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
+                return resp
                 
             except Exception as e:
                 logger.error(f"❌ Error in quick proposal: {e}")
@@ -680,10 +1334,11 @@ class VertexGrantAgentService:
             
             try:
                 # Extract comprehensive data
-                organization_info = data.get('organizationData', {})
-                funder_info = data.get('funderData', {})
-                project_data = data.get('projectData', {})
-                documents = data.get('uploadedFiles', [])
+                # accept both shapes: legacy and current client
+                organization_info = data.get('organizationData') or data.get('organization') or {}
+                funder_info = data.get('funderData') or data.get('funder') or {}
+                project_data = data.get('projectData') or data.get('project') or {}
+                documents = data.get('uploadedFiles') or data.get('documents') or []
                 
                 logger.info(f"📊 Processing comprehensive proposal through MAS")
                 
@@ -725,12 +1380,16 @@ class VertexGrantAgentService:
                 
                 logger.info(f"✅ Full proposal generated successfully")
                 
-                return JSONResponse({
+                resp = JSONResponse({
                     "success": True,
                     "proposal": proposal,
                     "timestamp": datetime.now().isoformat(),
+                    "summary": project_data.get('summary') or None,
+                    "grade": None,
                     "mode": "full_comprehensive_mas"
                 })
+                resp.headers["X-Request-ID"] = uuid.uuid4().hex[:10]
+                return resp
                 
             except Exception as e:
                 logger.error(f"❌ Error in full proposal: {e}")

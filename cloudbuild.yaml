@@ -1,4 +1,15 @@
 steps:
+  # Frontend lint and build (fail fast)
+  - name: 'gcr.io/cloud-builders/npm'
+    dir: 'grant-proposal-frontend'
+    entrypoint: 'bash'
+    args: ['-lc', 'npm ci && npm run lint && npm run build && ! grep -R -E "mock|placeholder|dummy|lorem|console\\.log" src || (echo "Mock/dummy/console found"; exit 1)']
+
+  # Backend tests
+  - name: 'python:3.11'
+    entrypoint: 'bash'
+    args: ['-lc', 'pip install -r requirements.txt && pip install pytest && pytest -q']
+
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -41,11 +52,13 @@ steps:
       - '--cpu'
       - '2'
       - '--concurrency'
-      - '50'
+      - '100'
       - '--timeout'
-      - '3600'
+      - '1200'
       - '--max-instances'
       - '10'
+      - '--min-instances'
+      - '1'
 
 images:
   - 'gcr.io/$PROJECT_ID/vertex-grant-agent:$BUILD_ID'

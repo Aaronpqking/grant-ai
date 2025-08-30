@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "lint:strict": "npm run lint && ! grep -R -nE \"localhost|127\\.0\\.0\\.1|mock|placeholder|dummy|lorem|console\\.log\" src",
+    "build:prod": "npm run lint:strict && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -14,11 +16,15 @@
     "ai": "^4.3.16",
     "lucide-react": "^0.514.0",
     "googleapis": "^121.0.0",
+    "@google-cloud/storage": "^6.12.0",
+    "@google-cloud/firestore": "^7.7.0",
+    "docx": "^8.5.0",
     "next": "15.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.3",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "react-markdown": "^9.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -306,7 +306,7 @@ export function FullProposalBuilder() {
         }
         if (response.grade) {
           // Store grade info locally or use to display badge
-          console.log('AI grade:', response.grade)
+          
         }
         
         // Save to localStorage
@@ -790,7 +790,7 @@ export function FullProposalBuilder() {
                   multiple
                   className="hidden"
                   onChange={(e) => handleFileUpload(e.target.files)}
-                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx,.csv"
                 />
               </div>
               

@@ -1,0 +1,94 @@
+{
+  "test_run_id": "2025-08-25T20:28:23.202808",
+  "base_url": "https://vertex-grant-agent-vqjdj6kdpq-uc.a.run.app",
+  "health_check": {
+    "test": "health_check",
+    "status": "PASS",
+    "duration": 22.143412113189697,
+    "response_code": 200,
+    "data": {
+      "status": "healthy",
+      "timestamp": "2025-08-26T00:28:45.262754",
+      "services": {
+        "direct_gcs": "active",
+        "artifact_service": "active",
+        "orchestrator": "active"
+      },
+      "message": "Vertex AI Grant Agent is operational"
+    }
+  },
+  "quick_proposal_tests": [],
+  "full_proposal_tests": [
+    {
+      "test": "full_proposal_basic_full",
+      "status": "FAIL",
+      "duration": 105.76420497894287,
+      "response_code": 200,
+      "validation": {
+        "has_success_flag": true,
+        "success_is_true": true,
+        "has_proposal_text": true,
+        "meets_length_requirement": true,
+        "contains_expected_content": [
+          {
+            "content": "Test Org",
+            "found": false
+          }
+        ],
+        "has_expected_sections": [
+          {
+            "section": "proposal",
+            "found": true
+          },
+          {
+            "section": "Project",
+            "found": true
+          },
+          {
+            "section": "Organization",
+            "found": true
+          }
+        ],
+        "response_time_acceptable": false,
+        "overall_pass": false
+      },
+      "proposal_preview": "Okay, here is the final, submission-ready grant proposal, incorporating all feedback and assuming the following *hypothetical* information. **Remember to replace this with *your* specific information and funder details!**\n\n**Hypothetical Scenario:**\n\n*   **Organization Name:** The Community Literacy..."
+    }
+  ],
+  "performance_tests": [
+    {
+      "test": "performance__quick_proposal",
+      "concurrent_requests": 3,
+      "successful_requests": 3,
+      "total_time": 96.59439992904663,
+      "average_request_time": 91.00768001874287,
+      "requests_per_second": 0.03105770109037013,
+      "status": "PASS",
+      "individual_results": [
+        {
+          "success": true,
+          "duration": 96.5922269821167,
+          "status_code": 200
+        },
+        {
+          "success": true,
+          "duration": 85.52787899971008,
+          "status_code": 200
+        },
+        {
+          "success": true,
+          "duration": 90.90293407440186,
+          "status_code": 200
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "passed_tests": 2,
+    "failed_tests": 1,
+    "average_response_time": 63.953808546066284,
+    "health_status": "PASS",
+    "pass_rate": 66.66666666666666
+  }
+}

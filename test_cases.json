@@ -1,0 +1,25 @@
+{
+  "test_cases": {
+    "quick_proposal_tests": [],
+    "full_proposal_tests": [
+      {
+        "name": "basic_full",
+        "data": {
+          "organization": {"name": "Test Org"},
+          "funder": {"name": "Test Funder"},
+          "project": {
+            "title": "Program Builder Integration Test",
+            "project_description": "Integration end-to-end test",
+            "summary": "AI generated summary placeholder"
+          },
+          "documents": []
+        },
+        "minimum_length": 50,
+        "should_contain": ["Test Org"],
+        "expected_sections": ["proposal", "Project", "Organization"]
+      }
+    ]
+  }
+}
+
+

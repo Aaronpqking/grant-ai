@@ -23,10 +23,17 @@ export function Dashboard() {
   })
   const [isHealthy, setIsHealthy] = useState(false)
   const [recentProposals, setRecentProposals] = useState<any[]>([])
+  const [enableQuickProposal, setEnableQuickProposal] = useState<boolean>(process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL === 'true')
 
   useEffect(() => {
     checkAPIHealth()
     loadDashboardData()
+    // fetch runtime flags for dynamic toggles without rebuild
+    fetch('/api/flags').then(r => r.json()).then(json => {
+      if (typeof json.enable_quick_proposal === 'boolean') {
+        setEnableQuickProposal(json.enable_quick_proposal)
+      }
+    }).catch(() => {})
   }, [])
 
   const checkAPIHealth = async () => {
@@ -144,7 +151,7 @@ export function Dashboard() {
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL === 'true' && (
+          {enableQuickProposal && (
             <Link href="/proposal/quick" className="group">
               <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100 hover:shadow-lg transition-all duration-300 group-hover:border-blue-200">
                 <div className="flex items-center space-x-4 mb-4">
@@ -161,7 +168,7 @@ export function Dashboard() {
               </div>
             </Link>
           )}
-          {!process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL || process.env.NEXT_PUBLIC_ENABLE_QUICK_PROPOSAL !== 'true' ? (
+          {!enableQuickProposal ? (
             <div className="group">
               <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
                 <div className="flex items-center space-x-4 mb-4">

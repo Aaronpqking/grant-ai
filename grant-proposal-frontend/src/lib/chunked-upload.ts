@@ -31,9 +31,7 @@ export class ChunkedUploader {
     const totalBytes = file.size
     const totalChunks = Math.ceil(totalBytes / CHUNK_SIZE)
     
-    console.log(`🔄 Starting chunked upload: ${fileName}`)
-    console.log(`📊 File size: ${(totalBytes / 1024 / 1024).toFixed(2)}MB`)
-    console.log(`📦 Total chunks: ${totalChunks}`)
+    
 
     try {
       // Initialize chunked upload session
@@ -66,11 +64,11 @@ export class ChunkedUploader {
               percentage
             })
             
-            console.log(`✅ Chunk ${chunkIndex + 1}/${totalChunks} uploaded (${percentage}%)`)
+            
             
           } catch (error) {
             retries++
-            console.warn(`⚠️ Chunk ${chunkIndex + 1} failed (attempt ${retries}/${MAX_RETRIES}):`, error)
+            
             
             if (retries >= MAX_RETRIES) {
               throw new Error(`Failed to upload chunk ${chunkIndex + 1} after ${MAX_RETRIES} attempts`)
@@ -175,7 +173,7 @@ export async function uploadFiles(
   for (const file of files) {
     try {
       if (needsChunkedUpload(file)) {
-        console.log(`📦 Using chunked upload for large file: ${file.name}`)
+        
         
         const chunkedUploader = new ChunkedUploader((progress) => {
           onProgress?.(file.name, progress.percentage)
@@ -195,7 +193,7 @@ export async function uploadFiles(
         }
         
       } else {
-        console.log(`📄 Using simple upload for file: ${file.name}`)
+        
         
         // Use existing simple upload method
         const formData = new FormData()

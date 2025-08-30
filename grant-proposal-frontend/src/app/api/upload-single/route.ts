@@ -4,14 +4,14 @@ const API_BASE = process.env.NEXT_PUBLIC_GRANT_API_URL || 'https://vertex-grant-
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 Proxying single file upload to backend...')
+    
     
     // Get the formData from the request
     const formData = await request.formData()
     
-    console.log('📦 Single file FormData received in proxy:')
+    
     for (let [key, value] of formData.entries()) {
-      console.log(`  ${key}:`, value instanceof File ? `File(${value.name}, ${value.size}b)` : value)
+      
     }
 
     // Forward the request to the backend API with extended timeout for large files
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     
     clearTimeout(timeoutId)
 
-    console.log('📡 Backend response status:', backendResponse.status)
+    
     
     if (!backendResponse.ok) {
       const errorText = await backendResponse.text()
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await backendResponse.json()
-    console.log('✅ Backend single file upload successful:', result)
+    
     
     return NextResponse.json(result)
     

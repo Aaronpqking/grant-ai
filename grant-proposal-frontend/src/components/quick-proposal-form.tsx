@@ -53,12 +53,17 @@ export function ProgramBuilderForm() {
   // Import from Google Forms / Sheets public CSV URL
   const importFromUrl = async (url: string) => {
     try {
-      const resp = await fetch(url)
-      if (!resp.ok) throw new Error('Failed to fetch URL')
-      const text = await resp.text()
-      const parsed = parseCsvToObjects(text)
-      if (parsed.length > 0) {
-        autofillFromJson(parsed[0])
+      // Use backend import endpoint which proxies and normalizes Google Sheets CSV
+      const resp = await fetch('/api/import/google-forms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      })
+      const json = await resp.json()
+      if (resp.ok && json.rows && json.rows.length > 0) {
+        autofillFromJson(json.rows[0])
+      } else {
+        throw new Error(json.message || 'No rows returned')
       }
     } catch (e) {
       console.error('Import failed', e)
@@ -77,7 +82,7 @@ export function ProgramBuilderForm() {
   const generateSuggestions = async (field: keyof FormData, value: string) => {
     if (value.length < 3) return
     
-    // Mock AI suggestions - in a real app, these would come from your AI service
+    
     const mockSuggestions: Record<string, string[]> = {
       organization_name: [
         'Freedom Equity Inc.',
@@ -121,8 +126,6 @@ export function ProgramBuilderForm() {
       setIsUploading(true)
       setError('')
       
-      console.log('🚀 Starting immediate upload of', newFiles.length, 'files')
-      
       try {
         // Add files to local state first for immediate UI feedback
         setFormData(prev => ({
@@ -141,13 +144,10 @@ export function ProgramBuilderForm() {
         setUploadProgress(progressMap)
 
         // Start upload immediately - handles both regular and chunked uploads
-        console.log('📤 Uploading files to backend...')
         
         // Update progress for each file during upload
         const totalSize = newFiles.reduce((sum, file) => sum + file.size, 0)
         if (totalSize > 30 * 1024 * 1024) {
-          console.log('🔄 Using chunked upload for large files...')
-          // Show individual file progress for chunked uploads
           for (const file of newFiles) {
             setUploadProgress(prev => ({
               ...prev,
@@ -173,7 +173,6 @@ export function ProgramBuilderForm() {
           
           setUploadStatus('success')
           const method = uploadResponse.upload_method || 'standard'
-          console.log(`✅ Documents uploaded successfully (${method}):`, uploadedFileData)
           
           // Clear progress after successful upload
           setUploadProgress({})
@@ -212,8 +211,7 @@ export function ProgramBuilderForm() {
           const text = await file.text()
           const json = JSON.parse(text)
           autofillFromJson(json)
-        } catch (e) {
-          console.warn('Failed to parse JSON file for autofill', file.name, e)
+        } catch (_e) {
         }
       } else if (name.endsWith('.csv')) {
         try {
@@ -223,8 +221,7 @@ export function ProgramBuilderForm() {
           if (Array.isArray(parsed) && parsed.length > 0) {
             autofillFromJson(parsed[0])
           }
-        } catch (e) {
-          console.warn('Failed to parse CSV file for autofill', file.name, e)
+        } catch (_e) {
         }
       }
     }
@@ -341,7 +338,7 @@ export function ProgramBuilderForm() {
       // Use already uploaded files (no upload during generation!)
       const uploadedFileInfo = formData.uploadedFiles?.filter(file => file.status === 'uploaded') || []
       
-      console.log('📋 Generating proposal with uploaded documents:', uploadedFileInfo)
+      
       
       // Generate proposal with form data
       const proposalData = {
@@ -418,7 +415,8 @@ export function ProgramBuilderForm() {
       const json = await resp.json()
       if (resp.ok) {
         // Open the returned document link if available
-        if (json.url) window.open(json.url, '_blank')
+        const link = json.webViewLink || json.download_url
+        if (link) window.open(link, '_blank')
       } else {
         setError(json.message || 'Failed to export to Google Docs')
       }

@@ -48,4 +48,21 @@ This project includes a stub API at `grant-proposal-frontend/src/pages/api/expor
 3. Install and use `googleapis` to create a document and return the shareable link from the API endpoint.
 
 
+## Architecture
+
+- See `ARCHITECTURE.md` for a high-level overview and diagram of how the system works.
+
+## Non-technical glossary
+
+- **Next.js**: The framework that powers the website (pages and small server functions). Hosted on Vercel.
+- **Vercel**: The hosting platform for the website, optimized for speed and scale.
+- **Vertex AI**: Google’s AI service the app uses to draft and improve proposal text.
+- **Cloud Run**: Google’s service that runs the Python AI app on demand in the cloud.
+- **FastAPI**: The toolkit the Python app uses to expose web endpoints (like “generate a proposal”).
+- **Google Docs API**: Lets the app create/export your final draft into a Google Doc.
+- **Google Forms API**: Lets the app import answers you collected in a Google Form.
+- **GCS (Cloud Storage)**: Where large files are stored in the cloud.
+- **Chunked uploads**: A safer way to upload large files piece-by-piece so a hiccup doesn’t restart from zero.
+
+
 
