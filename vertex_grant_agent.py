@@ -1009,11 +1009,11 @@ class VertexGrantAgentService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                log_error(request, "refine.error", error=str(e))
                 raise HTTPException(status_code=500, detail="Failed to refine sections")
 
         @self.app.post("/import/document")
-        async def import_document(file: UploadFile = File(...), request: Request):
+        async def import_document(request: Request, file: UploadFile = File(...)):
             try:
                 content_bytes = await file.read()
                 text = await extract_text(content_bytes, filename=file.filename or "uploaded")
@@ -1044,11 +1044,11 @@ class VertexGrantAgentService:
                 })
                 return resp
             except Exception as e:
-                logger.error(json.dumps({"request_id": request_id, "error": str(e)}))
+                log_error(request, "import_document.error", error=str(e))
                 raise HTTPException(status_code=500, detail="Failed to import document")
         
         @self.app.post("/upload_documents")
-        async def upload_documents(files: List[UploadFile] = File(...), request: Request):
+        async def upload_documents(request: Request, files: List[UploadFile] = File(...)):
             """Upload documents for grant processing"""
             try:
                 # Use AsyncArtifactService if available, otherwise fallback to direct GCS upload
@@ -1139,7 +1139,7 @@ class VertexGrantAgentService:
                     return resp
                 
             except Exception as e:
-                logger.error(f"Error uploading documents: {e}")
+                log_error(request, "upload_documents.error", error=str(e))
                 raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
         
         @self.app.get("/documents/{artifact_id}")
