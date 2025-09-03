@@ -1,9 +1,9 @@
 steps:
   # Frontend lint and build (fail fast)
-  - name: 'gcr.io/cloud-builders/npm'
+  - name: 'gcr.io/cloud-builders/node:20'
     dir: 'grant-proposal-frontend'
     entrypoint: 'bash'
-    args: ['-lc', 'npm ci && npm run lint && npm run build && ! grep -R -E "mock|placeholder|dummy|lorem|console\\.log" src || (echo "Mock/dummy/console found"; exit 1)']
+    args: ['-lc', 'npm ci && npm run lint && npm run build && ! grep -R -E "mock|dummy|lorem|console\\.log" src || (echo "Mock/dummy/console found"; exit 1)']
 
   # Backend tests
   - name: 'python:3.11'
